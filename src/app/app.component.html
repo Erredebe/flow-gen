@@ -1,7 +1,14 @@
 <div class="layout">
   <header class="topbar">
-    <h1>Flow Generator</h1>
-    <nav>
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">FG</span>
+      <div>
+        <h1>Flow Generator</h1>
+        <p>Diseña y valida flujos visuales de forma rápida.</p>
+      </div>
+    </div>
+
+    <nav aria-label="Navegación principal">
       <a routerLink="/editor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
         >Editor</a
       >

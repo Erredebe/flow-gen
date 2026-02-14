@@ -2,10 +2,12 @@
   <h2>Configuración de almacenamiento</h2>
   <p>Gestiona la información guardada en localStorage: cargar, editar y eliminar.</p>
 
-  <div class="actions">
-    <button type="button" (click)="loadFromStorage()">Cargar desde localStorage</button>
-    <button type="button" (click)="saveStorageDraft()">Guardar cambios</button>
-    <button type="button" class="danger" (click)="clearStorage()">Eliminar localStorage</button>
+  <div class="actions" aria-label="Acciones de gestión">
+    <button type="button" class="btn" (click)="loadFromStorage()">Cargar desde localStorage</button>
+    <button type="button" class="btn" (click)="saveStorageDraft()">Guardar cambios</button>
+    <button type="button" class="btn btn-danger" (click)="clearStorage()">
+      Eliminar localStorage
+    </button>
   </div>
 
   <label>

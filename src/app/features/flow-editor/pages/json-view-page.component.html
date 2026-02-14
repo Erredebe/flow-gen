@@ -2,11 +2,16 @@
   <h2>Vista JSON</h2>
   <p>Importa/exporta el flujo actual y usa el editor manual para ajustes avanzados.</p>
 
-  <div class="actions">
-    <button type="button" (click)="downloadJson()">Descargar JSON</button>
+  <div class="actions" aria-label="Acciones de gestión">
+    <button type="button" class="btn" (click)="downloadJson()">Descargar JSON</button>
     <label>
       Importar archivo JSON
-      <input #fileInput type="file" accept="application/json,.json" (change)="onFilePicked($event)" />
+      <input
+        #fileInput
+        type="file"
+        accept="application/json,.json"
+        (change)="onFilePicked($event)"
+      />
     </label>
   </div>
 
@@ -20,7 +25,7 @@
     ></textarea>
   </label>
 
-  <button type="button" (click)="loadFromTextarea()">Cargar desde textarea</button>
+  <button type="button" class="btn" (click)="loadFromTextarea()">Cargar desde textarea</button>
 
   @if (message(); as infoMessage) {
     <p class="message success">{{ infoMessage }}</p>

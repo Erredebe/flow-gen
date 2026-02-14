@@ -1,9 +1,11 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 
+import { ClearFlowStorageUseCase } from '../../../application/flow/clear-flow-storage.use-case';
 import { ConnectNodesUseCase } from '../../../application/flow/connect-nodes.use-case';
 import { CreateNodeUseCase } from '../../../application/flow/create-node.use-case';
 import { DeleteNodeUseCase } from '../../../application/flow/delete-node.use-case';
 import { ExportFlowJsonUseCase } from '../../../application/flow/export-flow-json.use-case';
+import { LoadFlowUseCase } from '../../../application/flow/load-flow.use-case';
 import { SaveFlowUseCase } from '../../../application/flow/save-flow.use-case';
 import { ValidateFlowUseCase } from '../../../application/flow/validate-flow.use-case';
 import {
@@ -22,6 +24,8 @@ export class FlowEditorStateService {
   private readonly importFlowFromJsonUseCase = inject(ImportFlowFromJsonUseCase);
   private readonly exportFlowJsonUseCase = inject(ExportFlowJsonUseCase);
   private readonly saveFlowUseCase = inject(SaveFlowUseCase);
+  private readonly loadFlowUseCase = inject(LoadFlowUseCase);
+  private readonly clearFlowStorageUseCase = inject(ClearFlowStorageUseCase);
   private readonly validateFlowUseCase = inject(ValidateFlowUseCase);
   private readonly createNodeUseCase = inject(CreateNodeUseCase);
   private readonly connectNodesUseCase = inject(ConnectNodesUseCase);
@@ -61,6 +65,32 @@ export class FlowEditorStateService {
     const result = this.createNodeUseCase.execute(this.draft(), type);
     this.draft.set(result.flow);
     return result.nodeId;
+  }
+
+  public ensureStartNode(): string {
+    const existingStart = this.draft().nodes.find((node) => node.type === 'start');
+    if (existingStart) {
+      return existingStart.id;
+    }
+
+    return this.createNode('start');
+  }
+
+  public markNodeAsStart(nodeId: string): void {
+    this.draft.update((flow) => ({
+      ...flow,
+      nodes: flow.nodes.map((node) => {
+        if (node.id === nodeId) {
+          return { ...node, type: 'start' };
+        }
+
+        if (node.type === 'start') {
+          return { ...node, type: 'action' };
+        }
+
+        return node;
+      })
+    }));
   }
 
   public moveNode(nodeId: string, position: NodePosition): void {
@@ -109,6 +139,21 @@ export class FlowEditorStateService {
     }
 
     return result;
+  }
+
+  public loadFromStorage(): boolean {
+    const storedFlow = this.loadFlowUseCase.execute();
+    if (!storedFlow) {
+      return false;
+    }
+
+    this.draft.set(this.normalizeFlow(storedFlow));
+    return true;
+  }
+
+  public clearStorageAndRestoreDefault(): void {
+    this.clearFlowStorageUseCase.execute();
+    this.draft.set(this.normalizeFlow(this.initializeFlowUseCase.execute()));
   }
 
   private normalizeFlow(flow: Flow): Flow {

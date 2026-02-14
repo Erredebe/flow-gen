@@ -1,1 +1,60 @@
-@use './flow-editor-page.component.scss';
+.panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgb(15 23 42 / 8%);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+textarea,
+button {
+  font: inherit;
+}
+
+textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border-radius: 0.6rem;
+  border: 1px solid #cbd5e1;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+button.danger {
+  background: #dc2626;
+}
+
+.message {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.65rem;
+}
+
+.message.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.message.error {
+  background: #fee2e2;
+  color: #b91c1c;
+}

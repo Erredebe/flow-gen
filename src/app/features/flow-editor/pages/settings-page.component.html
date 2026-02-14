@@ -1,4 +1,28 @@
 <section class="panel">
-  <h2>Configuración</h2>
-  <p>Ajustes globales del editor y preferencias de serialización.</p>
+  <h2>Configuración de almacenamiento</h2>
+  <p>Gestiona la información guardada en localStorage: cargar, editar y eliminar.</p>
+
+  <div class="actions">
+    <button type="button" (click)="loadFromStorage()">Cargar desde localStorage</button>
+    <button type="button" (click)="saveStorageDraft()">Guardar cambios</button>
+    <button type="button" class="danger" (click)="clearStorage()">Eliminar localStorage</button>
+  </div>
+
+  <label>
+    Contenido de localStorage (JSON)
+    <textarea
+      rows="18"
+      [ngModel]="storageDraft()"
+      (ngModelChange)="updateStorageDraft($event)"
+      spellcheck="false"
+    ></textarea>
+  </label>
+
+  @if (message(); as infoMessage) {
+    <p class="message success">{{ infoMessage }}</p>
+  }
+
+  @if (error(); as errorMessage) {
+    <p class="message error">{{ errorMessage }}</p>
+  }
 </section>

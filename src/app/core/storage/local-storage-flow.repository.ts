@@ -25,4 +25,8 @@ export class LocalStorageFlowRepository extends FlowRepository {
   public save(flow: Flow): void {
     this.localStorageService.setItem(STORAGE_KEY, JSON.stringify(flow));
   }
+
+  public clear(): void {
+    this.localStorageService.removeItem(STORAGE_KEY);
+  }
 }

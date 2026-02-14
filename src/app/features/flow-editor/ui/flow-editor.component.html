@@ -6,6 +6,7 @@
     </label>
 
     <div class="actions">
+      <button type="button" (click)="ensureStartNode()">+ Start</button>
       <button type="button" (click)="addNode('action')">+ Acción</button>
       <button type="button" (click)="addNode('decision')">+ Decisión</button>
       <button type="button" (click)="addNode('end')">+ Final</button>
@@ -46,6 +47,10 @@
             [style.top.px]="node.position.y"
             [class.selected]="selectedNodeId() === node.id"
             [class.link-target]="linkingSourceNodeId() && linkingSourceNodeId() !== node.id"
+            [class.node-start]="node.type === 'start'"
+            [class.node-action]="node.type === 'action'"
+            [class.node-decision]="node.type === 'decision'"
+            [class.node-end]="node.type === 'end'"
           >
             <small>{{ node.type }}</small>
             <strong>{{ node.label }}</strong>
@@ -82,6 +87,7 @@
         }
 
         <div class="panel-actions">
+          <button type="button" (click)="setSelectedAsStart()">Poner como Start</button>
           <button type="button" (click)="startLinkFromSelected()">Conectar desde este nodo</button>
           <button type="button" (click)="deleteSelected()">Eliminar nodo</button>
         </div>

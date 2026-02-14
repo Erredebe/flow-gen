@@ -107,6 +107,21 @@ export class FlowEditorComponent {
     this.metadataDraft.set(JSON.stringify(createdNode?.metadata ?? {}, null, 2));
   }
 
+  protected ensureStartNode(): void {
+    const nodeId = this.state.ensureStartNode();
+    this.selectedNodeId.set(nodeId);
+    this.selectedEdgeId.set(null);
+  }
+
+  protected setSelectedAsStart(): void {
+    const nodeId = this.selectedNodeId();
+    if (!nodeId) {
+      return;
+    }
+
+    this.state.markNodeAsStart(nodeId);
+  }
+
   protected startLinkFromSelected(): void {
     const nodeId = this.selectedNodeId();
     if (!nodeId) {
@@ -208,6 +223,7 @@ export class FlowEditorComponent {
       this.metadataError.set('JSON de metadatos inválido.');
     }
   }
+
 
   protected minimapPoint(value: number): number {
     return value * 0.08;

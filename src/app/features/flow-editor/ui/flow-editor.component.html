@@ -1,0 +1,129 @@
+<section class="editor-shell">
+  <header class="toolbar">
+    <label>
+      Nombre del flujo
+      <input type="text" [ngModel]="flow().name" (ngModelChange)="updateFlowName($event)" />
+    </label>
+
+    <div class="actions">
+      <button type="button" (click)="addNode('action')">+ Acción</button>
+      <button type="button" (click)="addNode('decision')">+ Decisión</button>
+      <button type="button" (click)="addNode('end')">+ Final</button>
+      <button type="button" (click)="setZoom(0.1)">Zoom +</button>
+      <button type="button" (click)="setZoom(-0.1)">Zoom -</button>
+      <button type="button" (click)="centerView()">Centrar</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <div class="flow-canvas-container">
+      <div
+        class="flow-canvas"
+        (dragover)="allowCanvasDrop($event)"
+        (drop)="onCanvasDrop($event)"
+        [style.transform]="'scale(' + zoom() + ')'"
+      >
+        <svg class="edges" viewBox="0 0 2000 1000" preserveAspectRatio="none">
+          @for (segment of edgeSegments(); track segment.edge.id) {
+            <line
+              [attr.x1]="segment.source.x"
+              [attr.y1]="segment.source.y"
+              [attr.x2]="segment.target.x"
+              [attr.y2]="segment.target.y"
+              (click)="selectEdge(segment.edge.id)"
+              [class.selected]="selectedEdgeId() === segment.edge.id"
+            ></line>
+          }
+        </svg>
+
+        @for (node of nodes(); track node.id) {
+          <article
+            class="node"
+            draggable="true"
+            (dragstart)="onNodeDragStart($event, node.id)"
+            (click)="selectNode(node)"
+            [style.left.px]="node.position.x"
+            [style.top.px]="node.position.y"
+            [class.selected]="selectedNodeId() === node.id"
+            [class.link-target]="linkingSourceNodeId() && linkingSourceNodeId() !== node.id"
+          >
+            <small>{{ node.type }}</small>
+            <strong>{{ node.label }}</strong>
+            @if (node.condition) {
+              <p>Cond: {{ node.condition }}</p>
+            }
+          </article>
+        }
+      </div>
+    </div>
+
+    <aside class="properties-panel">
+      <h3>Propiedades</h3>
+
+      @if (selectedNode(); as node) {
+        <p><strong>Nodo:</strong> {{ node.id }}</p>
+        <label>
+          Etiqueta
+          <input type="text" [ngModel]="node.label" (ngModelChange)="updateNodeLabel($event)" />
+        </label>
+
+        <label>
+          Condición
+          <input type="text" [ngModel]="node.condition ?? ''" (ngModelChange)="updateNodeCondition($event)" />
+        </label>
+
+        <label>
+          Metadatos (JSON)
+          <textarea [ngModel]="metadataDraft()" (ngModelChange)="updateMetadata($event)"></textarea>
+        </label>
+
+        @if (metadataError()) {
+          <p class="validation-error">{{ metadataError() }}</p>
+        }
+
+        <div class="panel-actions">
+          <button type="button" (click)="startLinkFromSelected()">Conectar desde este nodo</button>
+          <button type="button" (click)="deleteSelected()">Eliminar nodo</button>
+        </div>
+      } @else if (selectedEdge(); as edge) {
+        <p><strong>Conexión:</strong> {{ edge.id }}</p>
+        <p>{{ edge.sourceNodeId }} → {{ edge.targetNodeId }}</p>
+        <button type="button" (click)="deleteSelected()">Eliminar conexión</button>
+      } @else {
+        <p>Selecciona un nodo o conexión para editar sus propiedades.</p>
+      }
+
+      @if (linkingSourceNodeId()) {
+        <div class="link-hint">
+          <p>Haz click en otro nodo para crear la conexión.</p>
+          <button type="button" (click)="cancelLinking()">Cancelar</button>
+        </div>
+      }
+
+      @if (validationErrors().length > 0) {
+        <h4>Errores de validación</h4>
+        <ul>
+          @for (error of validationErrors(); track error.code + error.subjectId) {
+            <li class="validation-error">{{ error.message }}</li>
+          }
+        </ul>
+      }
+    </aside>
+  </div>
+
+  <section class="minimap">
+    <svg viewBox="0 0 160 80">
+      @for (segment of edgeSegments(); track segment.edge.id) {
+        <line
+          [attr.x1]="minimapPoint(segment.source.x)"
+          [attr.y1]="minimapPoint(segment.source.y)"
+          [attr.x2]="minimapPoint(segment.target.x)"
+          [attr.y2]="minimapPoint(segment.target.y)"
+        ></line>
+      }
+      @for (node of nodes(); track node.id) {
+        <rect [attr.x]="minimapPoint(node.position.x)" [attr.y]="minimapPoint(node.position.y)" width="12" height="6"></rect>
+      }
+    </svg>
+  </section>
+</section>

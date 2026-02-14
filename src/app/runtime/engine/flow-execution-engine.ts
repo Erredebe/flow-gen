@@ -1,7 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 
 import { ValidateFlowUseCase } from '../../application/flow/validate-flow.use-case';
+import { ExecutionEvent } from '../../domain/execution/execution-event.entity';
+import { FlowRun } from '../../domain/execution/flow-run.entity';
+import { NodeRun } from '../../domain/execution/node-run.entity';
 import { AnyFlowNode, Flow } from '../../domain/flow/flow.types';
+import { RunRepositoryPort } from '../../domain/ports/run-repository.port';
 import {
   ExecutionCheckpointStore,
   ExecutionContext,
@@ -25,18 +29,28 @@ interface SchedulingGraph {
 export class FlowExecutionEngine {
   private readonly validateFlowUseCase = inject(ValidateFlowUseCase);
   private readonly nodeExecutor = inject(NodeExecutorPort);
+  private readonly runRepository = inject(RunRepositoryPort);
 
   public async run(flow: Flow, context: ExecutionContext): Promise<ExecutionResult> {
     const startedAt = new Date();
     const checkpoints = new ExecutionCheckpointStore();
     const outputs: Record<string, unknown> = {};
+    const nodeRuns: NodeRun[] = [];
+    const eventSequence = { value: 0 };
     let nodeExecutions = 0;
     let retries = 0;
     let timedOutNodes = 0;
 
+    await this.emitEvent(context.runId, eventSequence, 'RUN_STARTED', {
+      flowId: flow.id,
+      traceId: context.traceId,
+      nodeCount: flow.nodes.length,
+      edgeCount: flow.edges.length
+    });
+
     const validationErrors = this.validateFlowUseCase.execute(flow);
     if (validationErrors.length > 0) {
-      return this.buildResult('validation_error', startedAt, {
+      const result = this.buildResult('validation_error', startedAt, {
         outputs,
         nodeExecutions,
         retries,
@@ -46,6 +60,8 @@ export class FlowExecutionEngine {
           message: validationErrors.map((error) => error.message).join('; ')
         }
       });
+
+      return this.finishRun(flow, context, result, startedAt, nodeRuns, eventSequence);
     }
 
     const graph = this.buildSchedulingGraph(flow);
@@ -65,12 +81,30 @@ export class FlowExecutionEngine {
         continue;
       }
 
+      const nodeStartedAt = new Date();
+      await this.emitEvent(context.runId, eventSequence, 'NODE_STARTED', { nodeId: node.id });
+
       const policy = this.extractNodePolicy(node);
 
       if (policy.idempotencyKey && checkpoints.has(node.id)) {
         const previous = checkpoints.get(node.id);
         if (previous) {
           outputs[node.id] = previous.outputs;
+          nodeRuns.push({
+            nodeId: node.id,
+            status: 'success',
+            startedAt: nodeStartedAt.toISOString(),
+            finishedAt: new Date().toISOString(),
+            retries: 0,
+            timedOut: false,
+            outputs: previous.outputs
+          });
+
+          await this.emitEvent(context.runId, eventSequence, 'NODE_SUCCEEDED', {
+            nodeId: node.id,
+            outputs: previous.outputs,
+            fromCheckpoint: true
+          });
         }
       } else {
         const upstreamOutputs = this.collectUpstreamOutputs(flow, node.id, outputs);
@@ -80,13 +114,34 @@ export class FlowExecutionEngine {
         timedOutNodes += execution.timedOut ? 1 : 0;
 
         if (execution.error) {
-          return this.buildResult(execution.status, startedAt, {
+          nodeRuns.push({
+            nodeId: node.id,
+            status: execution.status,
+            startedAt: nodeStartedAt.toISOString(),
+            finishedAt: new Date().toISOString(),
+            retries: execution.retries,
+            timedOut: execution.timedOut,
+            errorCode: execution.error.code,
+            errorMessage: execution.error.message
+          });
+
+          await this.emitEvent(context.runId, eventSequence, 'NODE_FAILED', {
+            nodeId: node.id,
+            status: execution.status,
+            retries: execution.retries,
+            timedOut: execution.timedOut,
+            error: execution.error
+          });
+
+          const result = this.buildResult(execution.status, startedAt, {
             outputs,
             nodeExecutions,
             retries,
             timedOutNodes,
             error: execution.error
           });
+
+          return this.finishRun(flow, context, result, startedAt, nodeRuns, eventSequence);
         }
 
         nodeExecutions += 1;
@@ -96,6 +151,22 @@ export class FlowExecutionEngine {
           outputs: execution.outcome?.outputs ?? {},
           executedAt: new Date().toISOString(),
           idempotencyKey: policy.idempotencyKey
+        });
+
+        nodeRuns.push({
+          nodeId: node.id,
+          status: 'success',
+          startedAt: nodeStartedAt.toISOString(),
+          finishedAt: new Date().toISOString(),
+          retries: execution.retries,
+          timedOut: false,
+          outputs: execution.outcome?.outputs ?? {}
+        });
+
+        await this.emitEvent(context.runId, eventSequence, 'NODE_SUCCEEDED', {
+          nodeId: node.id,
+          outputs: execution.outcome?.outputs ?? {},
+          retries: execution.retries
         });
       }
 
@@ -112,7 +183,7 @@ export class FlowExecutionEngine {
     }
 
     if (processedNodes !== flow.nodes.length) {
-      return this.buildResult('failed', startedAt, {
+      const result = this.buildResult('failed', startedAt, {
         outputs,
         nodeExecutions,
         retries,
@@ -122,9 +193,60 @@ export class FlowExecutionEngine {
           message: 'No se pudieron procesar todos los nodos del DAG.'
         }
       });
+
+      return this.finishRun(flow, context, result, startedAt, nodeRuns, eventSequence);
     }
 
-    return this.buildResult('success', startedAt, { outputs, nodeExecutions, retries, timedOutNodes });
+    const result = this.buildResult('success', startedAt, { outputs, nodeExecutions, retries, timedOutNodes });
+    return this.finishRun(flow, context, result, startedAt, nodeRuns, eventSequence);
+  }
+
+  private async finishRun(
+    flow: Flow,
+    context: ExecutionContext,
+    result: ExecutionResult,
+    startedAt: Date,
+    nodeRuns: NodeRun[],
+    eventSequence: { value: number }
+  ): Promise<ExecutionResult> {
+    await this.emitEvent(context.runId, eventSequence, 'RUN_FINISHED', {
+      status: result.status,
+      error: result.error,
+      metrics: result.metrics
+    });
+
+    const runSnapshot: FlowRun = {
+      runId: context.runId,
+      flowId: flow.id,
+      traceId: context.traceId,
+      status: result.status,
+      startedAt: startedAt.toISOString(),
+      finishedAt: result.metrics.finishedAt,
+      outputs: result.outputs,
+      nodeRuns,
+      errorCode: result.error?.code,
+      errorMessage: result.error?.message
+    };
+
+    await this.runRepository.saveRunSnapshot(runSnapshot);
+    return result;
+  }
+
+  private async emitEvent(
+    runId: string,
+    eventSequence: { value: number },
+    type: ExecutionEvent['type'],
+    payload?: Record<string, unknown>
+  ): Promise<void> {
+    eventSequence.value += 1;
+    await this.runRepository.appendEvent({
+      runId,
+      sequence: eventSequence.value,
+      type,
+      occurredAt: new Date().toISOString(),
+      nodeId: typeof payload?.['nodeId'] === 'string' ? (payload['nodeId'] as string) : undefined,
+      payload
+    });
   }
 
   private async executeNodeWithPolicy(
@@ -133,7 +255,7 @@ export class FlowExecutionEngine {
     upstreamOutputs: Record<string, unknown>,
     policy: NodeExecutionPolicy
   ): Promise<{
-    status: ExecutionStatus;
+    status: Exclude<ExecutionStatus, 'validation_error'>;
     outcome?: NodeExecutionOutcome;
     error?: ExecutionError;
     retries: number;

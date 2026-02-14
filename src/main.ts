@@ -42,7 +42,7 @@ const registerDefaultTools = (): void => {
       description: 'Imprime mensajes en consola durante la ejecución del flujo.',
       inputSchema: { type: 'object', additionalProperties: true },
       outputSchema: { type: 'object', additionalProperties: true },
-      capabilities: { sideEffectLevel: 'local' },
+      capabilities: { sideEffectLevel: 'write' },
       handler: ({ input }) => {
         const config = readConfig(input);
         const message = typeof config['message'] === 'string' ? config['message'] : 'Mensaje sin contenido';

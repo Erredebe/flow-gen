@@ -1,10 +1,12 @@
 <section class="panel">
-  <h2>Vista JSON</h2>
-  <p>Importa/exporta el flujo actual y usa el editor manual para ajustes avanzados.</p>
+  <header class="panel-header">
+    <h2>Vista JSON</h2>
+    <p>Importa/exporta el flujo actual y usa el editor avanzado para ajustes manuales del modelo.</p>
+  </header>
 
   <div class="actions" aria-label="Acciones de gestión">
     <button type="button" class="btn" (click)="downloadJson()">Descargar JSON</button>
-    <label>
+    <label class="file-label">
       Importar archivo JSON
       <input
         #fileInput

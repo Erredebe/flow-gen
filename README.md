@@ -35,6 +35,16 @@ src/app/
 - `/json`: vista de serialización JSON.
 - `/settings`: configuración general.
 
+
+## UX del editor y flujo inicial
+
+- El editor permite crear nodos desde un selector de tipo (incluye todos los tipos registrados).
+- Se añadieron atajos de teclado para eliminar selección (`Del` / `Supr` y `Backspace` fuera de inputs),
+  siempre mostrando un diálogo de confirmación.
+- La pantalla de Configuración y la vista JSON tienen una interfaz más clara para acciones de import/export y edición manual.
+- El flujo inicial de ejemplo incluye todos los tipos de nodo (`start`, `action`, `function-node`, `tool-node`,
+  `decision`, `end`) con metadatos y `config` explicativos para entender su uso real.
+
 ## Comandos
 
 ```bash

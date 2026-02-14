@@ -37,6 +37,29 @@
   gap: 0.5rem;
 }
 
+
+.node-type-picker {
+  min-width: 240px;
+}
+
+.node-type-picker select {
+  width: 100%;
+  padding: 0.58rem 0.68rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-bottom-width: 2px;
+  border-radius: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  background: #f8fafc;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
@@ -152,12 +175,14 @@ label {
 
 input,
 textarea,
+select,
 button {
   font: inherit;
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   padding: 0.58rem 0.68rem;
   border: 1px solid var(--border);

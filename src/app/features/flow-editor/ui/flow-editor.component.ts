@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { RunFlowUseCase } from '../../../application/flow/run-flow.use-case';
 import { AnyFlowNode, FlowEdge, FlowNodeType, JsonObject } from '../../../domain/flow/flow.types';
+import { NodeDefinitionRegistry } from '../../../domain/ports/node-definition-registry.port';
 import { IdGenerator } from '../../../domain/ports/id-generator.port';
 import { ExecutionResult } from '../../../runtime/engine/execution-state';
 import { FlowEditorStateService } from '../state/flow-editor-state.service';
@@ -24,6 +25,7 @@ export class FlowEditorComponent {
   protected readonly state = inject(FlowEditorStateService);
   private readonly runFlowUseCase = inject(RunFlowUseCase);
   private readonly idGenerator = inject(IdGenerator);
+  private readonly nodeDefinitionRegistry = inject(NodeDefinitionRegistry);
 
   protected readonly zoom = signal(1);
   protected readonly selectedNodeId = signal<string | null>(null);
@@ -37,11 +39,13 @@ export class FlowEditorComponent {
   protected readonly lastExecution = signal<ExecutionResult | null>(null);
   protected readonly runError = signal<string | null>(null);
   protected readonly lastRunId = signal<string | null>(null);
+  protected readonly nodeTypeDraft = signal<FlowNodeType>('action');
 
   protected readonly flow = computed(() => this.state.getDraft());
   protected readonly nodes = computed(() => this.flow().nodes);
   protected readonly edges = computed(() => this.flow().edges);
   protected readonly validationErrors = computed(() => this.state.getValidationErrors());
+  protected readonly availableNodeDefinitions = this.nodeDefinitionRegistry.listDefinitions();
 
   protected readonly selectedNode = computed(() => {
     const nodeId = this.selectedNodeId();
@@ -97,9 +101,36 @@ export class FlowEditorComponent {
     this.selectedNodeId.set(null);
   }
 
+  @HostListener('document:keydown', ['$event'])
+  protected onKeyboardShortcut(event: KeyboardEvent): void {
+    if (event.key !== 'Delete' && event.key !== 'Backspace') {
+      return;
+    }
+
+    const isTypingOnField =
+      event.target instanceof HTMLElement &&
+      ['INPUT', 'TEXTAREA'].includes(event.target.tagName);
+
+    if (isTypingOnField) {
+      return;
+    }
+
+    if (this.selectedNodeId() || this.selectedEdgeId()) {
+      event.preventDefault();
+      this.deleteSelected();
+    }
+  }
+
   protected deleteSelected(): void {
     const nodeId = this.selectedNodeId();
     if (nodeId) {
+      const accepted = window.confirm(
+        '¿Seguro que quieres eliminar el nodo seleccionado? Esta acción también borrará sus conexiones.'
+      );
+      if (!accepted) {
+        return;
+      }
+
       this.state.removeNode(nodeId);
       this.selectedNodeId.set(null);
       return;
@@ -107,6 +138,11 @@ export class FlowEditorComponent {
 
     const edgeId = this.selectedEdgeId();
     if (edgeId) {
+      const accepted = window.confirm('¿Seguro que quieres eliminar la conexión seleccionada?');
+      if (!accepted) {
+        return;
+      }
+
       this.state.removeEdge(edgeId);
       this.selectedEdgeId.set(null);
     }
@@ -119,6 +155,10 @@ export class FlowEditorComponent {
     const createdNode = this.state.findNodeById(nodeId);
     this.configDraft.set(JSON.stringify(createdNode?.config ?? {}, null, 2));
     this.metadataDraft.set(JSON.stringify(createdNode?.metadata ?? {}, null, 2));
+  }
+
+  protected addDraftNode(): void {
+    this.addNode(this.nodeTypeDraft());
   }
 
   protected ensureStartNode(): void {

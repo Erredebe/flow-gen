@@ -13,8 +13,8 @@ const flowFixture: Flow = {
   name: 'Flujo test',
   schemaVersion: FLOW_SCHEMA_VERSION,
   nodes: [
-    { id: 'start-1', type: 'start', label: 'Inicio', position: { x: 0, y: 0 }, metadata: {} },
-    { id: 'end-1', type: 'end', label: 'Fin', position: { x: 200, y: 0 }, metadata: {} }
+    { id: 'start-1', nodeType: 'start', label: 'Inicio', position: { x: 0, y: 0 }, metadata: {}, version: '1.0.0', config: {} },
+    { id: 'end-1', nodeType: 'end', label: 'Fin', position: { x: 200, y: 0 }, metadata: {}, version: '1.0.0', config: {} }
   ],
   edges: [{ id: 'edge-1', sourceNodeId: 'start-1', targetNodeId: 'end-1' }]
 };

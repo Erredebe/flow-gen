@@ -1,5 +1,6 @@
-import { CONNECTION_RULES, countNodeConnections, isValidConnectionByNodeType } from './flow-rules.contract';
-import { AnyFlowNode, DecisionBranch, Flow } from './flow.types';
+import { countNodeConnections, getConnectionRule, isValidConnectionByNodeType } from './flow-rules.contract';
+import { AnyFlowNode, Flow } from './flow.types';
+import { NodeDefinitionRegistry } from '../ports/node-definition-registry.port';
 
 export type FlowValidationCode =
   | 'EDGE_WITH_UNKNOWN_SOURCE'
@@ -19,9 +20,11 @@ export interface FlowValidationOptions {
   allowCycles?: boolean;
 }
 
-const DECISION_BRANCHES: ReadonlyArray<DecisionBranch> = ['true', 'false'];
-
-export function validateFlow(flow: Flow, options: FlowValidationOptions = {}): ReadonlyArray<FlowValidationError> {
+export function validateFlow(
+  flow: Flow,
+  nodeDefinitionRegistry: NodeDefinitionRegistry,
+  options: FlowValidationOptions = {}
+): ReadonlyArray<FlowValidationError> {
   const errors: FlowValidationError[] = [];
   const nodeById = createNodeMap(flow.nodes);
 
@@ -47,17 +50,17 @@ export function validateFlow(flow: Flow, options: FlowValidationOptions = {}): R
       continue;
     }
 
-    if (!isValidConnectionByNodeType(sourceNode, targetNode)) {
+    if (!isValidConnectionByNodeType(sourceNode, targetNode, nodeDefinitionRegistry)) {
       errors.push({
         code: 'INVALID_NODE_CONNECTION',
-        message: `Invalid connection from "${sourceNode.type}" node "${sourceNode.id}" to "${targetNode.type}" node "${targetNode.id}".`,
+        message: `Invalid connection from "${sourceNode.nodeType}" node "${sourceNode.id}" to "${targetNode.nodeType}" node "${targetNode.id}".`,
         subjectId: edge.id
       });
     }
   }
 
-  errors.push(...validateNodeOutgoingEdgeLimits(flow));
-  errors.push(...validateDecisionBranches(flow));
+  errors.push(...validateNodeOutgoingEdgeLimits(flow, nodeDefinitionRegistry));
+  errors.push(...validateBranchNodePorts(flow, nodeDefinitionRegistry));
 
   if (options.allowCycles !== true && hasCycle(flow)) {
     errors.push({
@@ -73,9 +76,12 @@ function createNodeMap(nodes: ReadonlyArray<AnyFlowNode>): Map<string, AnyFlowNo
   return new Map(nodes.map((node) => [node.id, node]));
 }
 
-function validateNodeOutgoingEdgeLimits(flow: Flow): ReadonlyArray<FlowValidationError> {
+function validateNodeOutgoingEdgeLimits(
+  flow: Flow,
+  nodeDefinitionRegistry: NodeDefinitionRegistry
+): ReadonlyArray<FlowValidationError> {
   return flow.nodes.flatMap((node) => {
-    const rules = CONNECTION_RULES[node.type];
+    const rules = getConnectionRule(node, nodeDefinitionRegistry);
     const connections = countNodeConnections(node.id, flow.edges);
 
     const hasMinViolation =
@@ -90,23 +96,28 @@ function validateNodeOutgoingEdgeLimits(flow: Flow): ReadonlyArray<FlowValidatio
     return [
       {
         code: 'INVALID_OUTGOING_EDGE_COUNT',
-        message: `Node "${node.id}" of type "${node.type}" has ${connections.outgoing} outgoing edges and must satisfy min=${rules.minOutgoingEdges ?? '-'} max=${rules.maxOutgoingEdges ?? '-'}.`,
+        message: `Node "${node.id}" of type "${node.nodeType}" has ${connections.outgoing} outgoing edges and must satisfy min=${rules.minOutgoingEdges ?? '-'} max=${rules.maxOutgoingEdges ?? '-'}.`,
         subjectId: node.id
       }
     ];
   });
 }
 
-function validateDecisionBranches(flow: Flow): ReadonlyArray<FlowValidationError> {
+function validateBranchNodePorts(
+  flow: Flow,
+  nodeDefinitionRegistry: NodeDefinitionRegistry
+): ReadonlyArray<FlowValidationError> {
   return flow.nodes.flatMap((node) => {
-    if (node.type !== 'decision') {
+    const definition = nodeDefinitionRegistry.getDefinition(node.nodeType);
+    if (!definition || definition.runtimeKind !== 'branch') {
       return [];
     }
 
     const outgoingEdges = flow.edges.filter((edge) => edge.sourceNodeId === node.id);
-    const presentBranches = new Set(outgoingEdges.map((edge) => edge.branch));
+    const presentBranches = new Set<string>(outgoingEdges.map((edge) => String(edge.branch ?? '')));
+    const expectedPorts = definition.outputPorts.map((port) => port.name);
 
-    const hasAllBranches = DECISION_BRANCHES.every((branch) => presentBranches.has(branch));
+    const hasAllBranches = expectedPorts.every((port) => presentBranches.has(port));
     if (hasAllBranches) {
       return [];
     }
@@ -114,7 +125,7 @@ function validateDecisionBranches(flow: Flow): ReadonlyArray<FlowValidationError
     return [
       {
         code: 'INCOMPLETE_DECISION_BRANCHES',
-        message: `Decision node "${node.id}" must define "true" and "false" branches in outgoing edges.`,
+        message: `Branch node "${node.id}" must define all configured outgoing branches (${expectedPorts.join(', ')}).`,
         subjectId: node.id
       }
     ];

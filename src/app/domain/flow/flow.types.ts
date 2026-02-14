@@ -2,41 +2,34 @@ export const FLOW_SCHEMA_VERSION = '1.0.0' as const;
 
 export type FlowSchemaVersion = typeof FLOW_SCHEMA_VERSION;
 
-export type FlowNodeType = 'start' | 'action' | 'decision' | 'end';
+export type FlowNodeType = string;
 
 export type DecisionBranch = 'true' | 'false';
+
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+export interface JsonObject {
+  [key: string]: JsonValue;
+}
+export type JsonArray = JsonValue[];
 
 export interface NodePosition {
   x: number;
   y: number;
 }
 
-export interface BaseFlowNode {
+export interface FlowNode {
   id: string;
   label: string;
-  type: FlowNodeType;
+  nodeType: FlowNodeType;
+  version: string;
+  config: JsonObject;
   position: NodePosition;
   condition?: string;
   metadata?: Record<string, string>;
 }
 
-export interface StartNode extends BaseFlowNode {
-  type: 'start';
-}
-
-export interface EndNode extends BaseFlowNode {
-  type: 'end';
-}
-
-export interface FlowNode extends BaseFlowNode {
-  type: 'action';
-}
-
-export interface DecisionNode extends BaseFlowNode {
-  type: 'decision';
-}
-
-export type AnyFlowNode = StartNode | FlowNode | DecisionNode | EndNode;
+export type AnyFlowNode = FlowNode;
 
 export interface FlowEdge {
   id: string;

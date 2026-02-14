@@ -9,8 +9,8 @@ describe('FlowEditorComponent', () => {
   let stateMock: jasmine.SpyObj<FlowEditorStateService>;
 
   const nodes: AnyFlowNode[] = [
-    { id: 'start-1', type: 'start', label: 'Inicio', position: { x: 0, y: 0 }, metadata: {} },
-    { id: 'action-1', type: 'action', label: 'Acción', position: { x: 200, y: 0 }, metadata: {} }
+    { id: 'start-1', nodeType: 'start', label: 'Inicio', position: { x: 0, y: 0 }, metadata: {}, version: '1.0.0', config: {} },
+    { id: 'action-1', nodeType: 'action', label: 'Acción', position: { x: 200, y: 0 }, metadata: {}, version: '1.0.0', config: {} }
   ];
 
   const flowFixture: Flow = {

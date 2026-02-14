@@ -9,24 +9,26 @@ const DEFAULT_FLOW: Flow = {
   name: 'Flujo de ejemplo',
   schemaVersion: FLOW_SCHEMA_VERSION,
   nodes: [
-    { id: 'start', label: 'Inicio', type: 'start', position: { x: 100, y: 180 }, metadata: {} },
+    { id: 'start', label: 'Inicio', nodeType: 'start', position: { x: 100, y: 180 }, metadata: {}, version: '1.0.0', config: {} },
     {
       id: 'action-1',
       label: 'Validar solicitud',
-      type: 'action',
+      nodeType: 'action',
       position: { x: 380, y: 180 },
-      metadata: { owner: 'ops' }
+      metadata: { owner: 'ops' },
+      version: '1.0.0',
+      config: {}
     },
     {
       id: 'decision-1',
       label: '¿Aprobada?',
-      type: 'decision',
+      nodeType: 'decision',
       position: { x: 680, y: 180 },
       condition: 'monto <= límite',
-      metadata: {}
+      metadata: {}, version: '1.0.0', config: {}
     },
-    { id: 'end-ok', label: 'Final exitoso', type: 'end', position: { x: 980, y: 80 }, metadata: {} },
-    { id: 'end-ko', label: 'Final rechazado', type: 'end', position: { x: 980, y: 300 }, metadata: {} }
+    { id: 'end-ok', label: 'Final exitoso', nodeType: 'end', position: { x: 980, y: 80 }, metadata: {}, version: '1.0.0', config: {} },
+    { id: 'end-ko', label: 'Final rechazado', nodeType: 'end', position: { x: 980, y: 300 }, metadata: {}, version: '1.0.0', config: {} }
   ],
   edges: [
     { id: 'edge-1', sourceNodeId: 'start', targetNodeId: 'action-1' },

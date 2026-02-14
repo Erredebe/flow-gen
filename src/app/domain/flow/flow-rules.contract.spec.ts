@@ -1,37 +1,46 @@
+import { InMemoryNodeDefinitionRegistryService } from '../../core/flow/in-memory-node-definition-registry.service';
 import { countNodeConnections, isValidConnectionByNodeType } from './flow-rules.contract';
 import { AnyFlowNode, FlowEdge } from './flow.types';
 
 const startNode: AnyFlowNode = {
   id: 'start-1',
-  type: 'start',
+  nodeType: 'start',
   label: 'Inicio',
   position: { x: 0, y: 0 },
-  metadata: {}
+  metadata: {},
+  version: '1.0.0',
+  config: {}
 };
 
 const actionNode: AnyFlowNode = {
   id: 'action-1',
-  type: 'action',
+  nodeType: 'action',
   label: 'Acción',
   position: { x: 100, y: 0 },
-  metadata: {}
+  metadata: {},
+  version: '1.0.0',
+  config: {}
 };
 
 const endNode: AnyFlowNode = {
   id: 'end-1',
-  type: 'end',
+  nodeType: 'end',
   label: 'Fin',
   position: { x: 200, y: 0 },
-  metadata: {}
+  metadata: {},
+  version: '1.0.0',
+  config: {}
 };
 
 describe('flow connection rules', () => {
+  const registry = new InMemoryNodeDefinitionRegistryService();
+
   it('allows valid start -> action connections', () => {
-    expect(isValidConnectionByNodeType(startNode, actionNode)).toBeTrue();
+    expect(isValidConnectionByNodeType(startNode, actionNode, registry)).toBeTrue();
   });
 
   it('rejects invalid end -> action connections', () => {
-    expect(isValidConnectionByNodeType(endNode, actionNode)).toBeFalse();
+    expect(isValidConnectionByNodeType(endNode, actionNode, registry)).toBeFalse();
   });
 
   it('counts incoming and outgoing connections', () => {

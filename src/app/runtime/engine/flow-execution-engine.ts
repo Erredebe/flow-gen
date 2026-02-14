@@ -397,10 +397,10 @@ export class FlowExecutionEngine {
 
   private extractNodePolicy(node: AnyFlowNode): NodeExecutionPolicy {
     const metadata = node.metadata ?? {};
-    const timeoutMs = this.toNumber(metadata.timeoutMs);
-    const retryMax = this.toNumber(metadata.retryMax);
-    const retryBackoffMs = this.toNumber(metadata.retryBackoffMs);
-    const idempotencyKey = metadata.idempotencyKey;
+    const timeoutMs = this.toNumber(metadata['timeoutMs']);
+    const retryMax = this.toNumber(metadata['retryMax']);
+    const retryBackoffMs = this.toNumber(metadata['retryBackoffMs']);
+    const idempotencyKey = metadata['idempotencyKey'];
 
     return {
       timeoutMs,

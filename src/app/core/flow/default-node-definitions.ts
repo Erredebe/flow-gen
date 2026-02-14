@@ -1,5 +1,11 @@
 import { NodeDefinition } from '../../domain/flow/node-definition.contract';
 
+const PASSTHROUGH_SCHEMA = {
+  type: 'object',
+  additionalProperties: true,
+  properties: {}
+};
+
 export const DEFAULT_NODE_DEFINITIONS: ReadonlyArray<NodeDefinition> = [
   {
     type: 'start',
@@ -7,11 +13,9 @@ export const DEFAULT_NODE_DEFINITIONS: ReadonlyArray<NodeDefinition> = [
     category: 'control',
     inputPorts: [],
     outputPorts: [{ name: 'next', displayName: 'Siguiente' }],
-    configSchema: {
-      type: 'object',
-      additionalProperties: true,
-      properties: {}
-    },
+    configSchema: PASSTHROUGH_SCHEMA,
+    inputSchema: { type: 'null' },
+    outputSchema: PASSTHROUGH_SCHEMA,
     runtimeKind: 'trigger',
     version: '1.0.0'
   },
@@ -21,12 +25,44 @@ export const DEFAULT_NODE_DEFINITIONS: ReadonlyArray<NodeDefinition> = [
     category: 'task',
     inputPorts: [{ name: 'in', displayName: 'Entrada' }],
     outputPorts: [{ name: 'next', displayName: 'Siguiente' }],
+    configSchema: PASSTHROUGH_SCHEMA,
+    inputSchema: PASSTHROUGH_SCHEMA,
+    outputSchema: PASSTHROUGH_SCHEMA,
+    runtimeKind: 'task',
+    version: '1.0.0'
+  },
+  {
+    type: 'tool-node',
+    displayName: 'Tool',
+    category: 'integration',
+    inputPorts: [{ name: 'in', displayName: 'Entrada' }],
+    outputPorts: [{ name: 'next', displayName: 'Siguiente' }],
     configSchema: {
       type: 'object',
       additionalProperties: true,
-      properties: {}
+      required: ['toolName'],
+      properties: { toolName: { type: 'string' } }
     },
-    runtimeKind: 'task',
+    inputSchema: PASSTHROUGH_SCHEMA,
+    outputSchema: PASSTHROUGH_SCHEMA,
+    runtimeKind: 'tool',
+    version: '1.0.0'
+  },
+  {
+    type: 'function-node',
+    displayName: 'Function',
+    category: 'integration',
+    inputPorts: [{ name: 'in', displayName: 'Entrada' }],
+    outputPorts: [{ name: 'next', displayName: 'Siguiente' }],
+    configSchema: {
+      type: 'object',
+      additionalProperties: true,
+      required: ['toolName'],
+      properties: { toolName: { type: 'string' } }
+    },
+    inputSchema: PASSTHROUGH_SCHEMA,
+    outputSchema: PASSTHROUGH_SCHEMA,
+    runtimeKind: 'function',
     version: '1.0.0'
   },
   {
@@ -45,6 +81,14 @@ export const DEFAULT_NODE_DEFINITIONS: ReadonlyArray<NodeDefinition> = [
         expression: { type: 'string' }
       }
     },
+    inputSchema: PASSTHROUGH_SCHEMA,
+    outputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        branch: { type: 'string' }
+      }
+    },
     runtimeKind: 'branch',
     version: '1.0.0'
   },
@@ -54,11 +98,9 @@ export const DEFAULT_NODE_DEFINITIONS: ReadonlyArray<NodeDefinition> = [
     category: 'control',
     inputPorts: [{ name: 'in', displayName: 'Entrada' }],
     outputPorts: [],
-    configSchema: {
-      type: 'object',
-      additionalProperties: true,
-      properties: {}
-    },
+    configSchema: PASSTHROUGH_SCHEMA,
+    inputSchema: PASSTHROUGH_SCHEMA,
+    outputSchema: { type: 'null' },
     runtimeKind: 'terminal',
     version: '1.0.0'
   }

@@ -85,12 +85,14 @@
           <button type="button" (click)="startLinkFromSelected()">Conectar desde este nodo</button>
           <button type="button" (click)="deleteSelected()">Eliminar nodo</button>
         </div>
-      } @else if (selectedEdge(); as edge) {
-        <p><strong>Conexión:</strong> {{ edge.id }}</p>
-        <p>{{ edge.sourceNodeId }} → {{ edge.targetNodeId }}</p>
-        <button type="button" (click)="deleteSelected()">Eliminar conexión</button>
       } @else {
-        <p>Selecciona un nodo o conexión para editar sus propiedades.</p>
+        @if (selectedEdge(); as edge) {
+          <p><strong>Conexión:</strong> {{ edge.id }}</p>
+          <p>{{ edge.sourceNodeId }} → {{ edge.targetNodeId }}</p>
+          <button type="button" (click)="deleteSelected()">Eliminar conexión</button>
+        } @else {
+          <p>Selecciona un nodo o conexión para editar sus propiedades.</p>
+        }
       }
 
       @if (linkingSourceNodeId()) {

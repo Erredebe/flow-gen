@@ -1,6 +1,11 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 
-import { ExportFlowToJsonUseCase } from '../../../application/use-cases/export-flow-to-json.use-case';
+import { ConnectNodesUseCase } from '../../../application/flow/connect-nodes.use-case';
+import { CreateNodeUseCase } from '../../../application/flow/create-node.use-case';
+import { DeleteNodeUseCase } from '../../../application/flow/delete-node.use-case';
+import { ExportFlowJsonUseCase } from '../../../application/flow/export-flow-json.use-case';
+import { SaveFlowUseCase } from '../../../application/flow/save-flow.use-case';
+import { ValidateFlowUseCase } from '../../../application/flow/validate-flow.use-case';
 import {
   ImportFlowFailure,
   ImportFlowFromJsonUseCase,
@@ -8,8 +13,6 @@ import {
 } from '../../../application/use-cases/import-flow-from-json.use-case';
 import { InitializeFlowUseCase } from '../../../application/use-cases/initialize-flow.use-case';
 import { AnyFlowNode, Flow, FlowNodeType, NodePosition } from '../../../domain/flow/flow.types';
-import { validateFlow } from '../../../domain/flow/flow.validators';
-import { FlowRepository } from '../../../domain/ports/flow-repository.port';
 
 @Injectable({
   providedIn: 'root'
@@ -17,16 +20,21 @@ import { FlowRepository } from '../../../domain/ports/flow-repository.port';
 export class FlowEditorStateService {
   private readonly initializeFlowUseCase = inject(InitializeFlowUseCase);
   private readonly importFlowFromJsonUseCase = inject(ImportFlowFromJsonUseCase);
-  private readonly exportFlowToJsonUseCase = inject(ExportFlowToJsonUseCase);
-  private readonly flowRepository = inject(FlowRepository);
+  private readonly exportFlowJsonUseCase = inject(ExportFlowJsonUseCase);
+  private readonly saveFlowUseCase = inject(SaveFlowUseCase);
+  private readonly validateFlowUseCase = inject(ValidateFlowUseCase);
+  private readonly createNodeUseCase = inject(CreateNodeUseCase);
+  private readonly connectNodesUseCase = inject(ConnectNodesUseCase);
+  private readonly deleteNodeUseCase = inject(DeleteNodeUseCase);
 
   private readonly draft = signal<Flow>(this.normalizeFlow(this.initializeFlowUseCase.execute()));
-  private readonly validationErrors = computed(() => validateFlow(this.draft(), { allowCycles: false }));
+  private readonly validationErrors = computed(() =>
+    this.validateFlowUseCase.execute(this.draft(), { allowCycles: false })
+  );
 
   public constructor() {
     effect(() => {
-      const flow = this.draft();
-      this.flowRepository.save(flow);
+      this.saveFlowUseCase.execute(this.draft());
     });
   }
 
@@ -39,7 +47,7 @@ export class FlowEditorStateService {
   }
 
   public getDraftJson(): string {
-    return this.exportFlowToJsonUseCase.execute(this.draft());
+    return this.exportFlowJsonUseCase.execute(this.draft());
   }
 
   public renameFlow(name: string): void {
@@ -50,29 +58,9 @@ export class FlowEditorStateService {
   }
 
   public createNode(type: FlowNodeType): string {
-    const nodeId = `${type}-${crypto.randomUUID().slice(0, 8)}`;
-
-    this.draft.update((flow) => {
-      const nextIndex = flow.nodes.length;
-      const node: AnyFlowNode = {
-        id: nodeId,
-        type,
-        label: this.getDefaultLabel(type),
-        condition: '',
-        position: {
-          x: 200 + (nextIndex % 5) * 220,
-          y: 120 + Math.floor(nextIndex / 5) * 140
-        },
-        metadata: {}
-      };
-
-      return {
-        ...flow,
-        nodes: [...flow.nodes, node]
-      };
-    });
-
-    return nodeId;
+    const result = this.createNodeUseCase.execute(this.draft(), type);
+    this.draft.set(result.flow);
+    return result.nodeId;
   }
 
   public moveNode(nodeId: string, position: NodePosition): void {
@@ -92,39 +80,11 @@ export class FlowEditorStateService {
   }
 
   public removeNode(nodeId: string): void {
-    this.draft.update((flow) => ({
-      ...flow,
-      nodes: flow.nodes.filter((node) => node.id !== nodeId),
-      edges: flow.edges.filter((edge) => edge.sourceNodeId !== nodeId && edge.targetNodeId !== nodeId)
-    }));
+    this.draft.update((flow) => this.deleteNodeUseCase.execute(flow, nodeId));
   }
 
   public createEdge(sourceNodeId: string, targetNodeId: string): void {
-    if (sourceNodeId === targetNodeId) {
-      return;
-    }
-
-    this.draft.update((flow) => {
-      const exists = flow.edges.some(
-        (edge) => edge.sourceNodeId === sourceNodeId && edge.targetNodeId === targetNodeId
-      );
-
-      if (exists) {
-        return flow;
-      }
-
-      return {
-        ...flow,
-        edges: [
-          ...flow.edges,
-          {
-            id: `edge-${crypto.randomUUID().slice(0, 8)}`,
-            sourceNodeId,
-            targetNodeId
-          }
-        ]
-      };
-    });
+    this.draft.update((flow) => this.connectNodesUseCase.execute(flow, sourceNodeId, targetNodeId));
   }
 
   public removeEdge(edgeId: string): void {
@@ -161,18 +121,5 @@ export class FlowEditorStateService {
         position: node.position ?? { x: 100 + index * 200, y: 120 }
       }))
     };
-  }
-
-  private getDefaultLabel(type: FlowNodeType): string {
-    switch (type) {
-      case 'start':
-        return 'Inicio';
-      case 'decision':
-        return 'Nueva decisión';
-      case 'end':
-        return 'Fin';
-      default:
-        return 'Nueva acción';
-    }
   }
 }

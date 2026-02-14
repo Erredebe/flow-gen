@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 
+import { LoadFlowUseCase } from '../flow/load-flow.use-case';
+import { SaveFlowUseCase } from '../flow/save-flow.use-case';
 import { FLOW_SCHEMA_VERSION, Flow } from '../../domain/flow/flow.types';
-import { FlowRepository } from '../../domain/ports/flow-repository.port';
 
 const DEFAULT_FLOW: Flow = {
   id: 'flow-example',
@@ -39,15 +40,16 @@ const DEFAULT_FLOW: Flow = {
   providedIn: 'root'
 })
 export class InitializeFlowUseCase {
-  private readonly flowRepository = inject(FlowRepository);
+  private readonly loadFlowUseCase = inject(LoadFlowUseCase);
+  private readonly saveFlowUseCase = inject(SaveFlowUseCase);
 
   public execute(): Flow {
-    const savedFlow = this.flowRepository.load();
+    const savedFlow = this.loadFlowUseCase.execute();
     if (savedFlow) {
       return savedFlow;
     }
 
-    this.flowRepository.save(DEFAULT_FLOW);
+    this.saveFlowUseCase.execute(DEFAULT_FLOW);
     return DEFAULT_FLOW;
   }
 }

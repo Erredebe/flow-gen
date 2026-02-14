@@ -46,6 +46,7 @@ const registerDefaultTools = (): void => {
       handler: ({ input }) => {
         const config = readConfig(input);
         const message = typeof config['message'] === 'string' ? config['message'] : 'Mensaje sin contenido';
+        // eslint-disable-next-line no-console
         console.log(`[flow-gen:console.log] ${message}`);
 
         return {
@@ -107,6 +108,11 @@ const registerDefaultTools = (): void => {
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(appRoutes),
+    {
+      provide: ENVIRONMENT_INITIALIZER,
+      multi: true,
+      useValue: () => registerDefaultTools()
+    },
     { provide: FlowRepository, useClass: LocalStorageFlowRepository },
     { provide: IdGenerator, useClass: UuidIdGeneratorService },
     { provide: NodeDefinitionRegistry, useClass: InMemoryNodeDefinitionRegistryService },

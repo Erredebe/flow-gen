@@ -1,18 +1,19 @@
 <section class="editor-shell">
   <header class="toolbar">
-    <label>
+    <p class="toolbar-title">Constructor visual de flujo</p>
+    <label class="flow-name">
       Nombre del flujo
       <input type="text" [ngModel]="flow().name" (ngModelChange)="updateFlowName($event)" />
     </label>
 
-    <div class="actions">
-      <button type="button" (click)="ensureStartNode()">+ Start</button>
-      <button type="button" (click)="addNode('action')">+ Acción</button>
-      <button type="button" (click)="addNode('decision')">+ Decisión</button>
-      <button type="button" (click)="addNode('end')">+ Final</button>
-      <button type="button" (click)="setZoom(0.1)">Zoom +</button>
-      <button type="button" (click)="setZoom(-0.1)">Zoom -</button>
-      <button type="button" (click)="centerView()">Centrar</button>
+    <div class="actions" aria-label="Acciones rápidas">
+      <button type="button" class="btn btn-ghost" (click)="ensureStartNode()">+ Start</button>
+      <button type="button" class="btn" (click)="addNode('action')">+ Acción</button>
+      <button type="button" class="btn" (click)="addNode('decision')">+ Decisión</button>
+      <button type="button" class="btn" (click)="addNode('end')">+ Final</button>
+      <button type="button" class="btn btn-soft" (click)="setZoom(0.1)">Zoom +</button>
+      <button type="button" class="btn btn-soft" (click)="setZoom(-0.1)">Zoom -</button>
+      <button type="button" class="btn btn-soft" (click)="centerView()">Centrar</button>
     </div>
   </header>
 
@@ -64,6 +65,7 @@
 
     <aside class="properties-panel">
       <h3>Propiedades</h3>
+      <p class="panel-help">Selecciona un elemento en el canvas para editar su configuración.</p>
 
       @if (selectedNode(); as node) {
         <p><strong>Nodo:</strong> {{ node.id }}</p>
@@ -74,7 +76,11 @@
 
         <label>
           Condición
-          <input type="text" [ngModel]="node.condition ?? ''" (ngModelChange)="updateNodeCondition($event)" />
+          <input
+            type="text"
+            [ngModel]="node.condition ?? ''"
+            (ngModelChange)="updateNodeCondition($event)"
+          />
         </label>
 
         <label>
@@ -87,15 +93,23 @@
         }
 
         <div class="panel-actions">
-          <button type="button" (click)="setSelectedAsStart()">Poner como Start</button>
-          <button type="button" (click)="startLinkFromSelected()">Conectar desde este nodo</button>
-          <button type="button" (click)="deleteSelected()">Eliminar nodo</button>
+          <button type="button" class="btn btn-soft" (click)="setSelectedAsStart()">
+            Poner como Start
+          </button>
+          <button type="button" class="btn" (click)="startLinkFromSelected()">
+            Conectar desde este nodo
+          </button>
+          <button type="button" class="btn btn-danger" (click)="deleteSelected()">
+            Eliminar nodo
+          </button>
         </div>
       } @else {
         @if (selectedEdge(); as edge) {
           <p><strong>Conexión:</strong> {{ edge.id }}</p>
           <p>{{ edge.sourceNodeId }} → {{ edge.targetNodeId }}</p>
-          <button type="button" (click)="deleteSelected()">Eliminar conexión</button>
+          <button type="button" class="btn btn-danger" (click)="deleteSelected()">
+            Eliminar conexión
+          </button>
         } @else {
           <p>Selecciona un nodo o conexión para editar sus propiedades.</p>
         }
@@ -104,7 +118,7 @@
       @if (linkingSourceNodeId()) {
         <div class="link-hint">
           <p>Haz click en otro nodo para crear la conexión.</p>
-          <button type="button" (click)="cancelLinking()">Cancelar</button>
+          <button type="button" class="btn btn-soft" (click)="cancelLinking()">Cancelar</button>
         </div>
       }
 
@@ -119,7 +133,7 @@
     </aside>
   </div>
 
-  <section class="minimap">
+  <section class="minimap" aria-label="Minimapa">
     <svg viewBox="0 0 160 80">
       @for (segment of edgeSegments(); track segment.edge.id) {
         <line
@@ -130,7 +144,12 @@
         ></line>
       }
       @for (node of nodes(); track node.id) {
-        <rect [attr.x]="minimapPoint(node.position.x)" [attr.y]="minimapPoint(node.position.y)" width="12" height="6"></rect>
+        <rect
+          [attr.x]="minimapPoint(node.position.x)"
+          [attr.y]="minimapPoint(node.position.y)"
+          width="12"
+          height="6"
+        ></rect>
       }
     </svg>
   </section>

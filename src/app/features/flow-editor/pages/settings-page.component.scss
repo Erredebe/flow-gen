@@ -3,8 +3,18 @@
   gap: 1rem;
   padding: 1.2rem;
   border-radius: 1rem;
-  background: #ffffff;
-  box-shadow: 0 2px 12px rgb(15 23 42 / 8%);
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgb(15 23 42 / 8%);
+  border: 1px solid var(--border);
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  p {
+    color: var(--muted);
+  }
 }
 
 .actions {
@@ -28,20 +38,25 @@ textarea {
   width: 100%;
   padding: 0.7rem;
   border-radius: 0.6rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border);
+  min-height: 340px;
 }
 
-button {
+.btn {
   border: 0;
   border-radius: 999px;
   padding: 0.5rem 0.9rem;
-  background: #2563eb;
+  background: var(--primary);
   color: #fff;
   cursor: pointer;
 }
 
-button.danger {
-  background: #dc2626;
+.btn:hover {
+  background: var(--primary-strong);
+}
+
+.btn-danger {
+  background: var(--danger);
 }
 
 .message {
@@ -50,11 +65,11 @@ button.danger {
 }
 
 .message.success {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 
 .message.error {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--error-bg);
+  color: var(--error-text);
 }

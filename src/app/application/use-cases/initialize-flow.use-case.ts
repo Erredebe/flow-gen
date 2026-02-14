@@ -40,10 +40,22 @@ const DEFAULT_FLOW: Flow = {
       }
     },
     {
+      id: 'function-sum',
+      label: 'Sumar 1 + 1 (función)',
+      nodeType: 'function-node',
+      position: { x: 680, y: 180 },
+      metadata: { note: 'Ejemplo de función embebida en JSON' },
+      version: '1.0.0',
+      config: {
+        toolName: 'browser.json-command',
+        function: '({ config }) => ({ result: 1 + 1, operation: "1 + 1" })'
+      }
+    },
+    {
       id: 'tool-console',
       label: 'Ejecutar console.log',
       nodeType: 'tool-node',
-      position: { x: 680, y: 180 },
+      position: { x: 680, y: 300 },
       metadata: {},
       version: '1.0.0',
       config: {
@@ -57,7 +69,7 @@ const DEFAULT_FLOW: Flow = {
       id: 'tool-alert',
       label: 'Ejecutar alert',
       nodeType: 'tool-node',
-      position: { x: 680, y: 300 },
+      position: { x: 680, y: 420 },
       metadata: {},
       version: '1.0.0',
       config: {
@@ -99,11 +111,12 @@ const DEFAULT_FLOW: Flow = {
   edges: [
     { id: 'edge-1', sourceNodeId: 'start', targetNodeId: 'action-1' },
     { id: 'edge-2', sourceNodeId: 'action-1', targetNodeId: 'function-1' },
-    { id: 'edge-3', sourceNodeId: 'function-1', targetNodeId: 'tool-console' },
-    { id: 'edge-4', sourceNodeId: 'tool-console', targetNodeId: 'tool-alert' },
-    { id: 'edge-5', sourceNodeId: 'tool-alert', targetNodeId: 'decision-1' },
-    { id: 'edge-6', sourceNodeId: 'decision-1', targetNodeId: 'end-ok', branch: 'true' },
-    { id: 'edge-7', sourceNodeId: 'decision-1', targetNodeId: 'end-ko', branch: 'false' }
+    { id: 'edge-3', sourceNodeId: 'function-1', targetNodeId: 'function-sum' },
+    { id: 'edge-4', sourceNodeId: 'function-sum', targetNodeId: 'tool-console' },
+    { id: 'edge-5', sourceNodeId: 'tool-console', targetNodeId: 'tool-alert' },
+    { id: 'edge-6', sourceNodeId: 'tool-alert', targetNodeId: 'decision-1' },
+    { id: 'edge-7', sourceNodeId: 'decision-1', targetNodeId: 'end-ok', branch: 'true' },
+    { id: 'edge-8', sourceNodeId: 'decision-1', targetNodeId: 'end-ko', branch: 'false' }
   ]
 };
 

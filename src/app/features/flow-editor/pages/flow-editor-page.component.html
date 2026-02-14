@@ -2,5 +2,15 @@
   <h2>Editor de flujo</h2>
   <p>Punto de entrada para construir y manipular nodos y transiciones.</p>
 
+  <label>
+    Nombre del flujo
+    <input
+      type="text"
+      [ngModel]="state.getDraft().name"
+      (ngModelChange)="updateName($event)"
+      placeholder="Nombre del flujo"
+    />
+  </label>
+
   <pre>{{ state.getDraft() | json }}</pre>
 </section>

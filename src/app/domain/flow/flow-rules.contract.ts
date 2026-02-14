@@ -1,4 +1,5 @@
-import { AnyFlowNode, FlowEdge, FlowNodeType } from './flow.types';
+import { AnyFlowNode, FlowEdge } from './flow.types';
+import { NodeDefinitionRegistry } from '../ports/node-definition-registry.port';
 
 export interface ConnectionRule {
   canHaveIncomingEdges: boolean;
@@ -7,33 +8,52 @@ export interface ConnectionRule {
   maxOutgoingEdges?: number;
 }
 
-export const CONNECTION_RULES: Readonly<Record<FlowNodeType, ConnectionRule>> = {
-  start: {
-    canHaveIncomingEdges: false,
-    canHaveOutgoingEdges: true,
-    minOutgoingEdges: 1,
-    maxOutgoingEdges: 1
-  },
-  action: {
-    canHaveIncomingEdges: true,
-    canHaveOutgoingEdges: true
-  },
-  decision: {
-    canHaveIncomingEdges: true,
-    canHaveOutgoingEdges: true,
-    minOutgoingEdges: 2,
-    maxOutgoingEdges: 2
-  },
-  end: {
-    canHaveIncomingEdges: true,
-    canHaveOutgoingEdges: false,
-    maxOutgoingEdges: 0
-  }
-};
+export function getConnectionRule(node: AnyFlowNode, registry: NodeDefinitionRegistry): ConnectionRule {
+  const definition = registry.getDefinition(node.nodeType);
 
-export function isValidConnectionByNodeType(source: AnyFlowNode, target: AnyFlowNode): boolean {
-  const sourceRule = CONNECTION_RULES[source.type];
-  const targetRule = CONNECTION_RULES[target.type];
+  if (!definition) {
+    return {
+      canHaveIncomingEdges: true,
+      canHaveOutgoingEdges: true
+    };
+  }
+
+  switch (definition.runtimeKind) {
+    case 'trigger':
+      return {
+        canHaveIncomingEdges: false,
+        canHaveOutgoingEdges: true,
+        minOutgoingEdges: 1,
+        maxOutgoingEdges: 1
+      };
+    case 'terminal':
+      return {
+        canHaveIncomingEdges: true,
+        canHaveOutgoingEdges: false,
+        maxOutgoingEdges: 0
+      };
+    case 'branch':
+      return {
+        canHaveIncomingEdges: true,
+        canHaveOutgoingEdges: true,
+        minOutgoingEdges: definition.outputPorts.length,
+        maxOutgoingEdges: definition.outputPorts.length
+      };
+    default:
+      return {
+        canHaveIncomingEdges: definition.inputPorts.length > 0,
+        canHaveOutgoingEdges: definition.outputPorts.length > 0
+      };
+  }
+}
+
+export function isValidConnectionByNodeType(
+  source: AnyFlowNode,
+  target: AnyFlowNode,
+  registry: NodeDefinitionRegistry
+): boolean {
+  const sourceRule = getConnectionRule(source, registry);
+  const targetRule = getConnectionRule(target, registry);
 
   return sourceRule.canHaveOutgoingEdges && targetRule.canHaveIncomingEdges;
 }

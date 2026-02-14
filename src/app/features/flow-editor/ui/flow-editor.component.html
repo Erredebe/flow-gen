@@ -48,12 +48,12 @@
             [style.top.px]="node.position.y"
             [class.selected]="selectedNodeId() === node.id"
             [class.link-target]="linkingSourceNodeId() && linkingSourceNodeId() !== node.id"
-            [class.node-start]="node.type === 'start'"
-            [class.node-action]="node.type === 'action'"
-            [class.node-decision]="node.type === 'decision'"
-            [class.node-end]="node.type === 'end'"
+            [class.node-start]="node.nodeType === 'start'"
+            [class.node-action]="node.nodeType === 'action'"
+            [class.node-decision]="node.nodeType === 'decision'"
+            [class.node-end]="node.nodeType === 'end'"
           >
-            <small>{{ node.type }}</small>
+            <small>{{ node.nodeType }}</small>
             <strong>{{ node.label }}</strong>
             @if (node.condition) {
               <p>Cond: {{ node.condition }}</p>

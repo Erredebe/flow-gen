@@ -61,14 +61,14 @@ export class FlowEditorStateService {
     }));
   }
 
-  public createNode(type: FlowNodeType): string {
-    const result = this.createNodeUseCase.execute(this.draft(), type);
+  public createNode(nodeType: FlowNodeType): string {
+    const result = this.createNodeUseCase.execute(this.draft(), nodeType);
     this.draft.set(result.flow);
     return result.nodeId;
   }
 
   public ensureStartNode(): string {
-    const existingStart = this.draft().nodes.find((node) => node.type === 'start');
+    const existingStart = this.draft().nodes.find((node) => node.nodeType === 'start');
     if (existingStart) {
       return existingStart.id;
     }
@@ -81,11 +81,11 @@ export class FlowEditorStateService {
       ...flow,
       nodes: flow.nodes.map((node) => {
         if (node.id === nodeId) {
-          return { ...node, type: 'start' };
+          return { ...node, nodeType: 'start' };
         }
 
-        if (node.type === 'start') {
-          return { ...node, type: 'action' };
+        if (node.nodeType === 'start') {
+          return { ...node, nodeType: 'action' };
         }
 
         return node;
@@ -159,12 +159,19 @@ export class FlowEditorStateService {
   private normalizeFlow(flow: Flow): Flow {
     return {
       ...flow,
-      nodes: flow.nodes.map((node, index) => ({
-        ...node,
-        condition: node.condition ?? '',
-        metadata: node.metadata ?? {},
-        position: node.position ?? { x: 100 + index * 200, y: 120 }
-      }))
+      nodes: flow.nodes.map((node, index) => {
+        const currentNodeType = node.nodeType ?? (node as AnyFlowNode & { type?: string }).type ?? 'action';
+
+        return {
+          ...node,
+          nodeType: currentNodeType,
+          version: node.version ?? '1.0.0',
+          config: node.config ?? {},
+          condition: node.condition ?? '',
+          metadata: node.metadata ?? {},
+          position: node.position ?? { x: 100 + index * 200, y: 120 }
+        };
+      })
     };
   }
 }

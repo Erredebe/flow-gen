@@ -15,10 +15,10 @@ export interface CreateNodeResult {
 export class CreateNodeUseCase {
   private readonly idGenerator = inject(IdGenerator);
 
-  public execute(flow: Flow, type: FlowNodeType): CreateNodeResult {
-    const nodeId = this.idGenerator.next(type);
+  public execute(flow: Flow, nodeType: FlowNodeType): CreateNodeResult {
+    const nodeId = this.idGenerator.next(nodeType);
     const node = createNode({
-      type,
+      nodeType,
       nodeId,
       existingNodeCount: flow.nodes.length
     });

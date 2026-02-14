@@ -9,7 +9,7 @@ const flowFixture: Flow = {
   id: 'flow-test',
   name: 'Flujo test',
   schemaVersion: FLOW_SCHEMA_VERSION,
-  nodes: [{ id: 'start-1', type: 'start', label: 'Inicio', position: { x: 0, y: 0 }, metadata: {} }],
+  nodes: [{ id: 'start-1', nodeType: 'start', label: 'Inicio', position: { x: 0, y: 0 }, metadata: {}, version: '1.0.0', config: {} }],
   edges: []
 };
 

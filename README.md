@@ -56,3 +56,24 @@ Se incluyen reglas para prevenir deuda técnica habitual:
 - Reglas de accesibilidad de templates Angular.
 
 Además, el formateo está centralizado en Prettier para minimizar diffs de estilo.
+
+## Criterios de aceptación funcionales (MVP)
+
+El MVP del generador de flujos se considera aceptado cuando cumple lo siguiente:
+
+- **Creación y edición del flujo**
+  - Permite crear nodos de tipo acción, decisión y final desde la barra del editor.
+  - Permite editar nombre del flujo, etiqueta, condición y metadatos JSON de un nodo.
+  - Permite mover nodos en el canvas y persistir su posición.
+- **Conexiones y reglas del dominio**
+  - Permite crear conexiones entre nodos desde el panel de propiedades.
+  - Impide conexiones duplicadas o auto-conexiones.
+  - Valida reglas de dominio: tipos de conexión, límites de salidas por nodo, ramas true/false en decisiones y detección de ciclos.
+- **Persistencia y portabilidad**
+  - Guarda automáticamente el flujo en almacenamiento local.
+  - Carga el último flujo disponible al inicializar la aplicación.
+  - Permite exportar el flujo a JSON con formato legible.
+  - Permite importar JSON validando primero esquema y reglas de dominio.
+- **Calidad mínima automatizada**
+  - Cada cambio ejecuta lint y tests en CI.
+  - El pipeline debe pasar para considerar el cambio integrable.

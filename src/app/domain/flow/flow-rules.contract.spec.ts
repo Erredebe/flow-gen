@@ -1,0 +1,47 @@
+import { countNodeConnections, isValidConnectionByNodeType } from './flow-rules.contract';
+import { AnyFlowNode, FlowEdge } from './flow.types';
+
+const startNode: AnyFlowNode = {
+  id: 'start-1',
+  type: 'start',
+  label: 'Inicio',
+  position: { x: 0, y: 0 },
+  metadata: {}
+};
+
+const actionNode: AnyFlowNode = {
+  id: 'action-1',
+  type: 'action',
+  label: 'Acción',
+  position: { x: 100, y: 0 },
+  metadata: {}
+};
+
+const endNode: AnyFlowNode = {
+  id: 'end-1',
+  type: 'end',
+  label: 'Fin',
+  position: { x: 200, y: 0 },
+  metadata: {}
+};
+
+describe('flow connection rules', () => {
+  it('allows valid start -> action connections', () => {
+    expect(isValidConnectionByNodeType(startNode, actionNode)).toBeTrue();
+  });
+
+  it('rejects invalid end -> action connections', () => {
+    expect(isValidConnectionByNodeType(endNode, actionNode)).toBeFalse();
+  });
+
+  it('counts incoming and outgoing connections', () => {
+    const edges: FlowEdge[] = [
+      { id: 'e1', sourceNodeId: 'start-1', targetNodeId: 'action-1' },
+      { id: 'e2', sourceNodeId: 'action-1', targetNodeId: 'end-1' },
+      { id: 'e3', sourceNodeId: 'start-1', targetNodeId: 'end-1' }
+    ];
+
+    expect(countNodeConnections('start-1', edges)).toEqual({ incoming: 0, outgoing: 2 });
+    expect(countNodeConnections('end-1', edges)).toEqual({ incoming: 2, outgoing: 0 });
+  });
+});

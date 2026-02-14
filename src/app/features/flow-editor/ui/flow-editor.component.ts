@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { RunFlowUseCase } from '../../../application/flow/run-flow.use-case';
 import { AnyFlowNode, FlowEdge, FlowNodeType } from '../../../domain/flow/flow.types';
+import { IdGenerator } from '../../../domain/ports/id-generator.port';
+import { ExecutionResult } from '../../../runtime/engine/execution-state';
 import { FlowEditorStateService } from '../state/flow-editor-state.service';
 
 interface CanvasPoint {
@@ -19,6 +22,8 @@ interface CanvasPoint {
 })
 export class FlowEditorComponent {
   protected readonly state = inject(FlowEditorStateService);
+  private readonly runFlowUseCase = inject(RunFlowUseCase);
+  private readonly idGenerator = inject(IdGenerator);
 
   protected readonly zoom = signal(1);
   protected readonly selectedNodeId = signal<string | null>(null);
@@ -26,6 +31,10 @@ export class FlowEditorComponent {
   protected readonly linkingSourceNodeId = signal<string | null>(null);
   protected readonly metadataDraft = signal('{}');
   protected readonly metadataError = signal<string | null>(null);
+  protected readonly runInProgress = signal(false);
+  protected readonly lastExecution = signal<ExecutionResult | null>(null);
+  protected readonly runError = signal<string | null>(null);
+  protected readonly lastRunId = signal<string | null>(null);
 
   protected readonly flow = computed(() => this.state.getDraft());
   protected readonly nodes = computed(() => this.flow().nodes);
@@ -222,6 +231,36 @@ export class FlowEditorComponent {
     } catch {
       this.metadataError.set('JSON de metadatos inválido.');
     }
+  }
+
+  protected async runFlow(): Promise<void> {
+    this.runInProgress.set(true);
+    this.runError.set(null);
+
+    const runId = this.idGenerator.next('run');
+    const traceId = this.idGenerator.next('trace');
+    this.lastRunId.set(runId);
+
+    try {
+      const result = await this.runFlowUseCase.execute(this.flow(), {
+        input: {},
+        variables: {},
+        secretReferences: [],
+        runId,
+        traceId
+      });
+
+      this.lastExecution.set(result);
+    } catch {
+      this.lastExecution.set(null);
+      this.runError.set('No se pudo ejecutar el flujo. Revisa la configuración de nodos.');
+    } finally {
+      this.runInProgress.set(false);
+    }
+  }
+
+  protected toJson(value: unknown): string {
+    return JSON.stringify(value, null, 2);
   }
 
 

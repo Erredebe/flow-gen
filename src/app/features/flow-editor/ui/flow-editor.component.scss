@@ -195,6 +195,19 @@ textarea {
   background: var(--danger);
 }
 
+.btn-run {
+  background: #059669;
+}
+
+.btn-run:hover {
+  background: #047857;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .panel-actions {
   display: flex;
   flex-wrap: wrap;

@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 
 import { safeParseJson } from '../../core/utils/json.utils';
-import { Flow, FLOW_SCHEMA_VERSION } from '../../domain/flow/flow.types';
-import { validateFlow } from '../../domain/flow/flow.validators';
-import { FlowRepository } from '../../domain/ports/flow-repository.port';
+import { Flow } from '../../domain/flow/flow.types';
+import { validateFlowSchema } from '../../domain/services/flow-schema-validator.service';
+import { SaveFlowUseCase } from '../flow/save-flow.use-case';
+import { ValidateFlowUseCase } from '../flow/validate-flow.use-case';
 
 export interface ImportFlowSuccess {
   success: true;
@@ -21,7 +22,8 @@ export type ImportFlowResult = ImportFlowSuccess | ImportFlowFailure;
   providedIn: 'root'
 })
 export class ImportFlowFromJsonUseCase {
-  private readonly flowRepository = inject(FlowRepository);
+  private readonly validateFlowUseCase = inject(ValidateFlowUseCase);
+  private readonly saveFlowUseCase = inject(SaveFlowUseCase);
 
   public execute(payload: string): ImportFlowResult {
     const parsedFlow = safeParseJson<unknown>(payload);
@@ -36,7 +38,7 @@ export class ImportFlowFromJsonUseCase {
 
     const flow = parsedFlow as Flow;
 
-    const domainErrors = validateFlow(flow);
+    const domainErrors = this.validateFlowUseCase.execute(flow);
     if (domainErrors.length > 0) {
       const details = domainErrors.map((error) => `• ${error.message}`).join('\n');
       return {
@@ -45,86 +47,7 @@ export class ImportFlowFromJsonUseCase {
       };
     }
 
-    this.flowRepository.save(flow);
+    this.saveFlowUseCase.execute(flow);
     return { success: true, flow };
   }
-}
-
-function validateFlowSchema(value: unknown): string | null {
-  if (!isRecord(value)) {
-    return 'El JSON debe contener un objeto en la raíz.';
-  }
-
-  if (typeof value.id !== 'string' || value.id.trim() === '') {
-    return 'El campo "id" es obligatorio y debe ser texto.';
-  }
-
-  if (typeof value.name !== 'string' || value.name.trim() === '') {
-    return 'El campo "name" es obligatorio y debe ser texto.';
-  }
-
-  if (value.schemaVersion !== FLOW_SCHEMA_VERSION) {
-    return `schemaVersion debe ser "${FLOW_SCHEMA_VERSION}".`;
-  }
-
-  if (!Array.isArray(value.nodes) || !Array.isArray(value.edges)) {
-    return 'El flujo debe incluir los arreglos "nodes" y "edges".';
-  }
-
-  const areNodesValid = value.nodes.every((node) => {
-    if (!isRecord(node)) {
-      return false;
-    }
-
-    const hasValidType =
-      node.type === 'start' || node.type === 'action' || node.type === 'decision' || node.type === 'end';
-
-    const hasValidPosition =
-      isRecord(node.position) && typeof node.position.x === 'number' && typeof node.position.y === 'number';
-
-    const hasValidMetadata =
-      node.metadata === undefined ||
-      (isRecord(node.metadata) &&
-        Object.values(node.metadata).every((value) => typeof value === 'string'));
-
-    const hasValidCondition = node.condition === undefined || typeof node.condition === 'string';
-
-    return (
-      typeof node.id === 'string' &&
-      typeof node.label === 'string' &&
-      hasValidType &&
-      hasValidPosition &&
-      hasValidMetadata &&
-      hasValidCondition
-    );
-  });
-
-  if (!areNodesValid) {
-    return 'Cada nodo debe incluir id, label, type válido y position {x,y}. condition y metadata son opcionales.';
-  }
-
-  const areEdgesValid = value.edges.every((edge) => {
-    if (!isRecord(edge)) {
-      return false;
-    }
-
-    const isBranchValid = edge.branch === undefined || edge.branch === 'true' || edge.branch === 'false';
-
-    return (
-      typeof edge.id === 'string' &&
-      typeof edge.sourceNodeId === 'string' &&
-      typeof edge.targetNodeId === 'string' &&
-      isBranchValid
-    );
-  });
-
-  if (!areEdgesValid) {
-    return 'Cada arista debe incluir id, sourceNodeId, targetNodeId y branch opcional (true/false).';
-  }
-
-  return null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }

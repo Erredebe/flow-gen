@@ -9,7 +9,15 @@ const DEFAULT_FLOW: Flow = {
   name: 'Flujo de ejemplo',
   schemaVersion: FLOW_SCHEMA_VERSION,
   nodes: [
-    { id: 'start', label: 'Inicio', nodeType: 'start', position: { x: 100, y: 180 }, metadata: {}, version: '1.0.0', config: {} },
+    {
+      id: 'start',
+      label: 'Inicio',
+      nodeType: 'start',
+      position: { x: 100, y: 180 },
+      metadata: {},
+      version: '1.0.0',
+      config: {}
+    },
     {
       id: 'action-1',
       label: 'Validar solicitud',
@@ -36,11 +44,13 @@ const DEFAULT_FLOW: Flow = {
       label: 'Ejecutar console.log',
       nodeType: 'tool-node',
       position: { x: 680, y: 180 },
-      metadata: { command: 'console.log' },
+      metadata: {},
       version: '1.0.0',
       config: {
-        toolName: 'browser.console.log',
-        message: 'Ejemplo inicial: mensaje desde nodo tool-node'
+        toolName: 'browser.json-command',
+        message: 'Ejemplo inicial: mensaje desde JSON del nodo',
+        command:
+          "console.log('[flow-gen:default]', config.message); return { logged: true, message: config.message };"
       }
     },
     {
@@ -48,11 +58,13 @@ const DEFAULT_FLOW: Flow = {
       label: 'Ejecutar alert',
       nodeType: 'tool-node',
       position: { x: 680, y: 300 },
-      metadata: { command: 'alert' },
+      metadata: {},
       version: '1.0.0',
       config: {
-        toolName: 'browser.alert',
-        message: 'Ejemplo inicial: alerta disparada por el flujo'
+        toolName: 'browser.json-command',
+        message: 'Ejemplo inicial: alerta disparada desde JSON del nodo',
+        command:
+          "if (typeof globalThis.alert === 'function') { globalThis.alert(config.message); } return { alerted: true, message: config.message };"
       }
     },
     {
@@ -61,10 +73,28 @@ const DEFAULT_FLOW: Flow = {
       nodeType: 'decision',
       position: { x: 1020, y: 180 },
       condition: 'monto <= límite',
-      metadata: {}, version: '1.0.0', config: {}
+      metadata: {},
+      version: '1.0.0',
+      config: {}
     },
-    { id: 'end-ok', label: 'Final exitoso', nodeType: 'end', position: { x: 1320, y: 80 }, metadata: {}, version: '1.0.0', config: {} },
-    { id: 'end-ko', label: 'Final rechazado', nodeType: 'end', position: { x: 1320, y: 300 }, metadata: {}, version: '1.0.0', config: {} }
+    {
+      id: 'end-ok',
+      label: 'Final exitoso',
+      nodeType: 'end',
+      position: { x: 1320, y: 80 },
+      metadata: {},
+      version: '1.0.0',
+      config: {}
+    },
+    {
+      id: 'end-ko',
+      label: 'Final rechazado',
+      nodeType: 'end',
+      position: { x: 1320, y: 300 },
+      metadata: {},
+      version: '1.0.0',
+      config: {}
+    }
   ],
   edges: [
     { id: 'edge-1', sourceNodeId: 'start', targetNodeId: 'action-1' },

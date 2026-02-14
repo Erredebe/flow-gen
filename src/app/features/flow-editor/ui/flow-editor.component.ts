@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 
 import { RunFlowUseCase } from '../../../application/flow/run-flow.use-case';
-import { AnyFlowNode, FlowEdge, FlowNodeType } from '../../../domain/flow/flow.types';
+import { AnyFlowNode, FlowEdge, FlowNodeType, JsonObject } from '../../../domain/flow/flow.types';
 import { IdGenerator } from '../../../domain/ports/id-generator.port';
 import { ExecutionResult } from '../../../runtime/engine/execution-state';
 import { FlowEditorStateService } from '../state/flow-editor-state.service';
@@ -29,6 +29,8 @@ export class FlowEditorComponent {
   protected readonly selectedNodeId = signal<string | null>(null);
   protected readonly selectedEdgeId = signal<string | null>(null);
   protected readonly linkingSourceNodeId = signal<string | null>(null);
+  protected readonly configDraft = signal('{}');
+  protected readonly configError = signal<string | null>(null);
   protected readonly metadataDraft = signal('{}');
   protected readonly metadataError = signal<string | null>(null);
   protected readonly runInProgress = signal(false);
@@ -84,6 +86,8 @@ export class FlowEditorComponent {
 
     this.selectedNodeId.set(node.id);
     this.selectedEdgeId.set(null);
+    this.configDraft.set(JSON.stringify(node.config ?? {}, null, 2));
+    this.configError.set(null);
     this.metadataDraft.set(JSON.stringify(node.metadata ?? {}, null, 2));
     this.metadataError.set(null);
   }
@@ -113,6 +117,7 @@ export class FlowEditorComponent {
     this.selectedNodeId.set(nodeId);
     this.selectedEdgeId.set(null);
     const createdNode = this.state.findNodeById(nodeId);
+    this.configDraft.set(JSON.stringify(createdNode?.config ?? {}, null, 2));
     this.metadataDraft.set(JSON.stringify(createdNode?.metadata ?? {}, null, 2));
   }
 
@@ -221,15 +226,39 @@ export class FlowEditorComponent {
         return;
       }
 
-      const sanitized = Object.entries(parsed).reduce<Record<string, string>>((acc, [key, value]) => {
-        acc[key] = String(value);
-        return acc;
-      }, {});
+      const sanitized = Object.entries(parsed).reduce<Record<string, string>>(
+        (acc, [key, value]) => {
+          acc[key] = String(value);
+          return acc;
+        },
+        {}
+      );
 
       this.metadataError.set(null);
       this.state.updateNode(nodeId, { metadata: sanitized });
     } catch {
       this.metadataError.set('JSON de metadatos inválido.');
+    }
+  }
+
+  protected updateConfig(rawValue: string): void {
+    this.configDraft.set(rawValue);
+    const nodeId = this.selectedNodeId();
+    if (!nodeId) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(rawValue) as JsonObject;
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        this.configError.set('La configuración debe ser un objeto JSON.');
+        return;
+      }
+
+      this.configError.set(null);
+      this.state.updateNode(nodeId, { config: parsed });
+    } catch {
+      this.configError.set('JSON de configuración inválido.');
     }
   }
 
@@ -262,7 +291,6 @@ export class FlowEditorComponent {
   protected toJson(value: unknown): string {
     return JSON.stringify(value, null, 2);
   }
-
 
   protected minimapPoint(value: number): number {
     return value * 0.08;

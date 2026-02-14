@@ -20,6 +20,14 @@ export const appRoutes: Routes = [
         (module) => module.JsonViewPageComponent
       )
   },
+
+  {
+    path: 'debug',
+    loadComponent: () =>
+      import('./features/flow-editor/pages/run-debug-page.component').then(
+        (module) => module.RunDebugPageComponent
+      )
+  },
   {
     path: 'settings',
     loadComponent: () =>

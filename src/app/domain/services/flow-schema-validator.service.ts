@@ -13,8 +13,8 @@ export function validateFlowSchema(value: unknown): string | null {
     return 'El campo "name" es obligatorio y debe ser texto.';
   }
 
-  if (value['schemaVersion'] !== FLOW_SCHEMA_VERSION) {
-    return `schemaVersion debe ser "${FLOW_SCHEMA_VERSION}".`;
+  if (typeof value['schemaVersion'] !== 'string' || value['schemaVersion'].trim() === '') {
+    return 'El campo "schemaVersion" es obligatorio y debe ser texto.';
   }
 
   if (!Array.isArray(value['nodes']) || !Array.isArray(value['edges'])) {
@@ -26,17 +26,30 @@ export function validateFlowSchema(value: unknown): string | null {
       return false;
     }
 
+    const rawNodeType = typeof node['nodeType'] === 'string' ? node['nodeType'] : node['type'];
     const hasValidType =
-      node['type'] === 'start' || node['type'] === 'action' || node['type'] === 'decision' || node['type'] === 'end';
+      rawNodeType === 'start' ||
+      rawNodeType === 'action' ||
+      rawNodeType === 'decision' ||
+      rawNodeType === 'end';
 
     const position = node['position'];
-    const hasValidPosition = isRecord(position) && typeof position['x'] === 'number' && typeof position['y'] === 'number';
+    const hasValidPosition =
+      isRecord(position) && typeof position['x'] === 'number' && typeof position['y'] === 'number';
 
     const metadata = node['metadata'];
     const hasValidMetadata =
-      metadata === undefined || (isRecord(metadata) && Object.values(metadata).every((entry) => typeof entry === 'string'));
+      metadata === undefined ||
+      (isRecord(metadata) && Object.values(metadata).every((entry) => typeof entry === 'string'));
 
-    const hasValidCondition = node['condition'] === undefined || typeof node['condition'] === 'string';
+    const hasValidCondition =
+      node['condition'] === undefined || typeof node['condition'] === 'string';
+
+    const hasValidVersion =
+      node['version'] === undefined ||
+      (typeof node['version'] === 'string' && node['version'].trim() !== '');
+
+    const hasValidConfig = node['config'] === undefined || isRecord(node['config']);
 
     return (
       typeof node['id'] === 'string' &&
@@ -44,12 +57,14 @@ export function validateFlowSchema(value: unknown): string | null {
       hasValidType &&
       hasValidPosition &&
       hasValidMetadata &&
-      hasValidCondition
+      hasValidCondition &&
+      hasValidVersion &&
+      hasValidConfig
     );
   });
 
   if (!areNodesValid) {
-    return 'Cada nodo debe incluir id, label, type válido y position {x,y}. condition y metadata son opcionales.';
+    return 'Cada nodo debe incluir id, label, type/nodeType válido y position {x,y}. condition y metadata son opcionales.';
   }
 
   const areEdgesValid = value['edges'].every((edge) => {
@@ -57,7 +72,8 @@ export function validateFlowSchema(value: unknown): string | null {
       return false;
     }
 
-    const isBranchValid = edge['branch'] === undefined || edge['branch'] === 'true' || edge['branch'] === 'false';
+    const isBranchValid =
+      edge['branch'] === undefined || edge['branch'] === 'true' || edge['branch'] === 'false';
 
     return (
       typeof edge['id'] === 'string' &&
@@ -69,6 +85,10 @@ export function validateFlowSchema(value: unknown): string | null {
 
   if (!areEdgesValid) {
     return 'Cada arista debe incluir id, sourceNodeId, targetNodeId y branch opcional (true/false).';
+  }
+
+  if (value['schemaVersion'] !== FLOW_SCHEMA_VERSION) {
+    return `schemaVersion debe ser "${FLOW_SCHEMA_VERSION}".`;
   }
 
   return null;

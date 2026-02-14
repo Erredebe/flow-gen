@@ -6,7 +6,9 @@
   background: var(--surface);
   box-shadow: 0 10px 28px rgb(15 23 42 / 8%);
   border: 1px solid var(--border);
+}
 
+.panel-header {
   h2,
   p {
     margin: 0;
@@ -14,6 +16,13 @@
 
   p {
     color: var(--muted);
+  }
+
+  code {
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.35rem;
   }
 }
 
@@ -40,6 +49,7 @@ textarea {
   border-radius: 0.6rem;
   border: 1px solid var(--border);
   min-height: 340px;
+  background: #f8fafc;
 }
 
 .btn {

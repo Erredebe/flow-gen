@@ -1,1 +1,89 @@
-@use './flow-editor-page.component.scss';
+.panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgb(15 23 42 / 8%);
+  border: 1px solid var(--border);
+}
+
+.panel-header {
+  h2,
+  p {
+    margin: 0;
+  }
+
+  p {
+    color: var(--muted);
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.file-label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+textarea,
+input,
+button {
+  font: inherit;
+}
+
+textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--border);
+  min-height: 340px;
+  background: #f8fafc;
+}
+
+input[type='file'] {
+  border: 1px dashed var(--border);
+  border-radius: 0.6rem;
+  padding: 0.5rem;
+  background: #fff;
+}
+
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--primary-strong);
+}
+
+.message {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.65rem;
+}
+
+.message.success {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.message.error {
+  background: var(--error-bg);
+  color: var(--error-text);
+}

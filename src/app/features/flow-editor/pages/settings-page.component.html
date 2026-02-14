@@ -1,6 +1,11 @@
 <section class="panel">
-  <h2>Configuración de almacenamiento</h2>
-  <p>Gestiona la información guardada en localStorage: cargar, editar y eliminar.</p>
+  <header class="panel-header">
+    <h2>Configuración de almacenamiento</h2>
+    <p>
+      Gestiona el estado persistido en <code>localStorage</code>: cargar cambios, editar manualmente y
+      restaurar una base limpia.
+    </p>
+  </header>
 
   <div class="actions" aria-label="Acciones de gestión">
     <button type="button" class="btn" (click)="loadFromStorage()">Cargar desde localStorage</button>

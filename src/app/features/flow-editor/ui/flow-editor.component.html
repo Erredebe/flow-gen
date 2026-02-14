@@ -7,10 +7,18 @@
     </label>
 
     <div class="actions" aria-label="Acciones rápidas">
+      <label class="node-type-picker">
+        Tipo de nodo
+        <select [ngModel]="nodeTypeDraft()" (ngModelChange)="nodeTypeDraft.set($event)">
+          @for (definition of availableNodeDefinitions; track definition.type) {
+            <option [value]="definition.type">
+              {{ definition.displayName }} ({{ definition.type }})
+            </option>
+          }
+        </select>
+      </label>
+      <button type="button" class="btn" (click)="addDraftNode()">+ Añadir nodo</button>
       <button type="button" class="btn btn-ghost" (click)="ensureStartNode()">+ Start</button>
-      <button type="button" class="btn" (click)="addNode('action')">+ Acción</button>
-      <button type="button" class="btn" (click)="addNode('decision')">+ Decisión</button>
-      <button type="button" class="btn" (click)="addNode('end')">+ Final</button>
       <button type="button" class="btn btn-soft" (click)="setZoom(0.1)">Zoom +</button>
       <button type="button" class="btn btn-soft" (click)="setZoom(-0.1)">Zoom -</button>
       <button type="button" class="btn btn-soft" (click)="centerView()">Centrar</button>
@@ -68,7 +76,10 @@
 
     <aside class="properties-panel">
       <h3>Propiedades</h3>
-      <p class="panel-help">Selecciona un elemento en el canvas para editar su configuración.</p>
+      <p class="panel-help">
+        Selecciona un elemento en el canvas para editar su configuración. Atajos: <kbd>Supr</kbd> / <kbd>Del</kbd>
+        para eliminar el elemento seleccionado (con confirmación).
+      </p>
 
       @if (selectedNode(); as node) {
         <p><strong>Nodo:</strong> {{ node.id }}</p>

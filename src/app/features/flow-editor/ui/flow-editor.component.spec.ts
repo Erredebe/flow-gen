@@ -1,12 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { RunFlowUseCase } from '../../../application/flow/run-flow.use-case';
 import { AnyFlowNode, FLOW_SCHEMA_VERSION, Flow } from '../../../domain/flow/flow.types';
+import { IdGenerator } from '../../../domain/ports/id-generator.port';
 import { FlowEditorStateService } from '../state/flow-editor-state.service';
 import { FlowEditorComponent } from './flow-editor.component';
 
 describe('FlowEditorComponent', () => {
   let fixture: ComponentFixture<FlowEditorComponent>;
   let stateMock: jasmine.SpyObj<FlowEditorStateService>;
+  let runFlowUseCaseMock: jasmine.SpyObj<RunFlowUseCase>;
+  let idGeneratorMock: jasmine.SpyObj<IdGenerator>;
 
   const nodes: AnyFlowNode[] = [
     { id: 'start-1', nodeType: 'start', label: 'Inicio', position: { x: 0, y: 0 }, metadata: {}, version: '1.0.0', config: {} },
@@ -40,9 +44,30 @@ describe('FlowEditorComponent', () => {
     stateMock.findNodeById.and.callFake((nodeId: string) => nodes.find((node) => node.id === nodeId));
     stateMock.createNode.and.returnValue('action-2');
 
+    runFlowUseCaseMock = jasmine.createSpyObj<RunFlowUseCase>('RunFlowUseCase', ['execute']);
+    runFlowUseCaseMock.execute.and.resolveTo({
+      status: 'success',
+      outputs: {},
+      metrics: {
+        startedAt: '2024-01-01T00:00:00.000Z',
+        finishedAt: '2024-01-01T00:00:01.000Z',
+        durationMs: 1000,
+        nodeExecutions: 1,
+        retries: 0,
+        timedOutNodes: 0
+      }
+    });
+
+    idGeneratorMock = jasmine.createSpyObj<IdGenerator>('IdGenerator', ['next']);
+    idGeneratorMock.next.and.returnValues('run-1', 'trace-1');
+
     await TestBed.configureTestingModule({
       imports: [FlowEditorComponent],
-      providers: [{ provide: FlowEditorStateService, useValue: stateMock }]
+      providers: [
+        { provide: FlowEditorStateService, useValue: stateMock },
+        { provide: RunFlowUseCase, useValue: runFlowUseCaseMock },
+        { provide: IdGenerator, useValue: idGeneratorMock }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FlowEditorComponent);
@@ -78,4 +103,16 @@ describe('FlowEditorComponent', () => {
 
     expect(stateMock.createEdge).toHaveBeenCalledWith('start-1', 'action-1');
   });
+
+  it('runs the flow when clicking execute button', async () => {
+    const runButton = Array.from(fixture.nativeElement.querySelectorAll('button')).find(
+      (button: HTMLButtonElement) => button.textContent?.includes('Ejecutar flujo')
+    ) as HTMLButtonElement;
+
+    runButton.click();
+    await fixture.whenStable();
+
+    expect(runFlowUseCaseMock.execute).toHaveBeenCalled();
+  });
+
 });

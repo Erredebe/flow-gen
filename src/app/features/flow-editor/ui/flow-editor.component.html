@@ -14,6 +14,9 @@
       <button type="button" class="btn btn-soft" (click)="setZoom(0.1)">Zoom +</button>
       <button type="button" class="btn btn-soft" (click)="setZoom(-0.1)">Zoom -</button>
       <button type="button" class="btn btn-soft" (click)="centerView()">Centrar</button>
+      <button type="button" class="btn btn-run" [disabled]="runInProgress()" (click)="runFlow()">
+        {{ runInProgress() ? 'Ejecutando…' : '▶ Ejecutar flujo' }}
+      </button>
     </div>
   </header>
 
@@ -122,6 +125,18 @@
         </div>
       }
 
+
+      @if (runError(); as message) {
+        <p class="validation-error">{{ message }}</p>
+      }
+
+      @if (lastExecution(); as result) {
+        <h4>Última ejecución</h4>
+        <p><strong>runId:</strong> {{ lastRunId() }}</p>
+        <p><strong>Estado:</strong> {{ result.status }}</p>
+        <p><strong>Duración:</strong> {{ result.metrics.durationMs }} ms</p>
+        <pre>{{ toJson(result.outputs) }}</pre>
+      }
       @if (validationErrors().length > 0) {
         <h4>Errores de validación</h4>
         <ul>

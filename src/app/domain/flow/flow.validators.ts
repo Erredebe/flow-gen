@@ -8,7 +8,8 @@ export type FlowValidationCode =
   | 'INVALID_NODE_CONNECTION'
   | 'INVALID_OUTGOING_EDGE_COUNT'
   | 'CYCLE_DETECTED'
-  | 'INCOMPLETE_DECISION_BRANCHES';
+  | 'INCOMPLETE_DECISION_BRANCHES'
+  | 'INCOMPATIBLE_EDGE_SCHEMA';
 
 export interface FlowValidationError {
   code: FlowValidationCode;
@@ -61,6 +62,7 @@ export function validateFlow(
 
   errors.push(...validateNodeOutgoingEdgeLimits(flow, nodeDefinitionRegistry));
   errors.push(...validateBranchNodePorts(flow, nodeDefinitionRegistry));
+  errors.push(...validateEdgeSchemaCompatibility(flow, nodeDefinitionRegistry));
 
   if (options.allowCycles !== true && hasCycle(flow)) {
     errors.push({
@@ -186,4 +188,72 @@ function detectCycle(
 
   inStack.delete(nodeId);
   return false;
+}
+
+
+function validateEdgeSchemaCompatibility(
+  flow: Flow,
+  nodeDefinitionRegistry: NodeDefinitionRegistry
+): ReadonlyArray<FlowValidationError> {
+  const nodeById = createNodeMap(flow.nodes);
+
+  return flow.edges.flatMap((edge) => {
+    const sourceNode = nodeById.get(edge.sourceNodeId);
+    const targetNode = nodeById.get(edge.targetNodeId);
+    if (!sourceNode || !targetNode) {
+      return [];
+    }
+
+    const sourceDefinition = nodeDefinitionRegistry.getDefinition(sourceNode.nodeType);
+    const targetDefinition = nodeDefinitionRegistry.getDefinition(targetNode.nodeType);
+    if (!sourceDefinition?.outputSchema || !targetDefinition?.inputSchema) {
+      return [];
+    }
+
+    if (isSchemaCompatible(sourceDefinition.outputSchema, targetDefinition.inputSchema)) {
+      return [];
+    }
+
+    return [{
+      code: 'INCOMPATIBLE_EDGE_SCHEMA',
+      message: `Edge "${edge.id}" connects incompatible schemas from "${sourceNode.id}" to "${targetNode.id}".`,
+      subjectId: edge.id
+    }];
+  });
+}
+
+function isSchemaCompatible(sourceOutputSchema: AnyFlowNode['config'], targetInputSchema: AnyFlowNode['config']): boolean {
+  const sourceType = readSchemaType(sourceOutputSchema);
+  const targetType = readSchemaType(targetInputSchema);
+
+  if (!sourceType || !targetType) {
+    return true;
+  }
+
+  if (targetType === 'object') {
+    const allowsAdditionalProperties = targetInputSchema['additionalProperties'];
+    if (allowsAdditionalProperties === true) {
+      return sourceType === 'object';
+    }
+
+    const sourceProperties = sourceOutputSchema['properties'];
+    const targetProperties = targetInputSchema['properties'];
+
+    if (!isPlainObject(sourceProperties) || !isPlainObject(targetProperties)) {
+      return sourceType === 'object';
+    }
+
+    return Object.keys(targetProperties).every((propertyName) => propertyName in sourceProperties);
+  }
+
+  return sourceType === targetType;
+}
+
+function readSchemaType(schema: AnyFlowNode['config']): string | undefined {
+  const value = schema['type'];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

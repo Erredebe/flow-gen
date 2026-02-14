@@ -14,6 +14,8 @@ export interface NodeDefinition {
   inputPorts: ReadonlyArray<NodePortDefinition>;
   outputPorts: ReadonlyArray<NodePortDefinition>;
   configSchema: JsonObject;
+  inputSchema?: JsonObject;
+  outputSchema?: JsonObject;
   runtimeKind: NodeRuntimeKind;
   version: string;
 }

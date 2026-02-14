@@ -90,6 +90,55 @@ describe('validateFlow', () => {
     expect(codes).toContain('INVALID_OUTGOING_EDGE_COUNT');
   });
 
+
+
+  it('detects incompatible schema between source output and target input', () => {
+    registry.register({
+      type: 'producer-string',
+      displayName: 'Producer string',
+      category: 'task',
+      inputPorts: [{ name: 'in', displayName: 'Entrada' }],
+      outputPorts: [{ name: 'next', displayName: 'Siguiente' }],
+      configSchema: { type: 'object', additionalProperties: true, properties: {} },
+      outputSchema: { type: 'string' },
+      runtimeKind: 'task',
+      version: '1.0.0'
+    });
+
+    registry.register({
+      type: 'consumer-object',
+      displayName: 'Consumer object',
+      category: 'task',
+      inputPorts: [{ name: 'in', displayName: 'Entrada' }],
+      outputPorts: [{ name: 'next', displayName: 'Siguiente' }],
+      configSchema: { type: 'object', additionalProperties: true, properties: {} },
+      inputSchema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: { expected: { type: 'string' } }
+      },
+      runtimeKind: 'task',
+      version: '1.0.0'
+    });
+
+    const flow = createBaseFlow({
+      nodes: [
+        { id: 'start-1', nodeType: 'start', label: 'Inicio', position: { x: 0, y: 0 }, metadata: {}, version: '1.0.0', config: {} },
+        { id: 'producer-1', nodeType: 'producer-string', label: 'Produce', position: { x: 100, y: 0 }, metadata: {}, version: '1.0.0', config: {} },
+        { id: 'consumer-1', nodeType: 'consumer-object', label: 'Consume', position: { x: 200, y: 0 }, metadata: {}, version: '1.0.0', config: {} },
+        { id: 'end-1', nodeType: 'end', label: 'Fin', position: { x: 300, y: 0 }, metadata: {}, version: '1.0.0', config: {} }
+      ],
+      edges: [
+        { id: 'edge-1', sourceNodeId: 'start-1', targetNodeId: 'producer-1' },
+        { id: 'edge-2', sourceNodeId: 'producer-1', targetNodeId: 'consumer-1' },
+        { id: 'edge-3', sourceNodeId: 'consumer-1', targetNodeId: 'end-1' }
+      ]
+    });
+
+    const codes = validateFlow(flow, registry).map((error) => error.code);
+    expect(codes).toContain('INCOMPATIBLE_EDGE_SCHEMA');
+  });
+
   it('permite registrar un nodo nuevo sin cambiar validadores base', () => {
     const customNodeDefinition: NodeDefinition = {
       type: 'human-review',

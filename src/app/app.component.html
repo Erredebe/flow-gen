@@ -1,0 +1,16 @@
+<div class="layout">
+  <header class="topbar">
+    <h1>Flow Generator</h1>
+    <nav>
+      <a routerLink="/editor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+        >Editor</a
+      >
+      <a routerLink="/json" routerLinkActive="active">JSON</a>
+      <a routerLink="/settings" routerLinkActive="active">Configuración</a>
+    </nav>
+  </header>
+
+  <main>
+    <router-outlet></router-outlet>
+  </main>
+</div>

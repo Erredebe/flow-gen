@@ -1,15 +1,12 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 
-import { FlowRepository } from '../../core/services/flow.repository';
-import { FlowEntity } from '../../domain/entities/flow.entity';
+import { Flow } from '../../domain/flow/flow.types';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ExportFlowToJsonUseCase {
-  private readonly flowRepository = inject(FlowRepository);
-
-  public execute(): FlowEntity {
-    return this.flowRepository.getCurrentFlow();
+  public execute(flow: Flow): string {
+    return JSON.stringify(flow, null, 2);
   }
 }

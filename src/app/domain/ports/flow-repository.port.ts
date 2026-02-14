@@ -1,5 +1,7 @@
-import { FlowEntity } from '../entities/flow.entity';
+import { Flow } from '../flow/flow.types';
 
-export abstract class FlowRepositoryPort {
-  public abstract getCurrentFlow(): FlowEntity;
+export abstract class FlowRepository {
+  public abstract load(): Flow | null;
+
+  public abstract save(flow: Flow): void;
 }

@@ -8,11 +8,24 @@ const DEFAULT_FLOW: Flow = {
   name: 'Flujo de ejemplo',
   schemaVersion: FLOW_SCHEMA_VERSION,
   nodes: [
-    { id: 'start', label: 'Inicio', type: 'start' },
-    { id: 'action-1', label: 'Validar solicitud', type: 'action' },
-    { id: 'decision-1', label: '¿Aprobada?', type: 'decision' },
-    { id: 'end-ok', label: 'Final exitoso', type: 'end' },
-    { id: 'end-ko', label: 'Final rechazado', type: 'end' }
+    { id: 'start', label: 'Inicio', type: 'start', position: { x: 100, y: 180 }, metadata: {} },
+    {
+      id: 'action-1',
+      label: 'Validar solicitud',
+      type: 'action',
+      position: { x: 380, y: 180 },
+      metadata: { owner: 'ops' }
+    },
+    {
+      id: 'decision-1',
+      label: '¿Aprobada?',
+      type: 'decision',
+      position: { x: 680, y: 180 },
+      condition: 'monto <= límite',
+      metadata: {}
+    },
+    { id: 'end-ok', label: 'Final exitoso', type: 'end', position: { x: 980, y: 80 }, metadata: {} },
+    { id: 'end-ko', label: 'Final rechazado', type: 'end', position: { x: 980, y: 300 }, metadata: {} }
   ],
   edges: [
     { id: 'edge-1', sourceNodeId: 'start', targetNodeId: 'action-1' },

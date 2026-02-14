@@ -6,10 +6,18 @@ export type FlowNodeType = 'start' | 'action' | 'decision' | 'end';
 
 export type DecisionBranch = 'true' | 'false';
 
+export interface NodePosition {
+  x: number;
+  y: number;
+}
+
 export interface BaseFlowNode {
   id: string;
   label: string;
   type: FlowNodeType;
+  position: NodePosition;
+  condition?: string;
+  metadata?: Record<string, string>;
 }
 
 export interface StartNode extends BaseFlowNode {

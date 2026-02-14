@@ -1,21 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { JsonPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { FlowEditorStateService } from '../state/flow-editor-state.service';
+import { FlowEditorComponent } from '../ui/flow-editor.component';
 
 @Component({
   selector: 'app-flow-editor-page',
   standalone: true,
-  imports: [JsonPipe, FormsModule],
+  imports: [FlowEditorComponent],
   templateUrl: './flow-editor-page.component.html',
   styleUrl: './flow-editor-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FlowEditorPageComponent {
-  protected readonly state = inject(FlowEditorStateService);
-
-  protected updateName(name: string): void {
-    this.state.renameFlow(name);
-  }
-}
+export class FlowEditorPageComponent {}

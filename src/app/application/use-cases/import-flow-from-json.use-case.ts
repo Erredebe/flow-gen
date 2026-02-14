@@ -71,16 +71,36 @@ function validateFlowSchema(value: unknown): string | null {
     return 'El flujo debe incluir los arreglos "nodes" y "edges".';
   }
 
-  const areNodesValid = value.nodes.every(
-    (node) =>
-      isRecord(node) &&
+  const areNodesValid = value.nodes.every((node) => {
+    if (!isRecord(node)) {
+      return false;
+    }
+
+    const hasValidType =
+      node.type === 'start' || node.type === 'action' || node.type === 'decision' || node.type === 'end';
+
+    const hasValidPosition =
+      isRecord(node.position) && typeof node.position.x === 'number' && typeof node.position.y === 'number';
+
+    const hasValidMetadata =
+      node.metadata === undefined ||
+      (isRecord(node.metadata) &&
+        Object.values(node.metadata).every((value) => typeof value === 'string'));
+
+    const hasValidCondition = node.condition === undefined || typeof node.condition === 'string';
+
+    return (
       typeof node.id === 'string' &&
       typeof node.label === 'string' &&
-      (node.type === 'start' || node.type === 'action' || node.type === 'decision' || node.type === 'end')
-  );
+      hasValidType &&
+      hasValidPosition &&
+      hasValidMetadata &&
+      hasValidCondition
+    );
+  });
 
   if (!areNodesValid) {
-    return 'Cada nodo debe incluir id, label y type válido (start, action, decision, end).';
+    return 'Cada nodo debe incluir id, label, type válido y position {x,y}. condition y metadata son opcionales.';
   }
 
   const areEdgesValid = value.edges.every((edge) => {

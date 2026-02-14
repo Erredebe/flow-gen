@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 
 import { safeParseJson } from '../../core/utils/json.utils';
 import { Flow } from '../../domain/flow/flow.types';
+import { FlowMigrationPipeline } from '../../domain/flow/migrations/flow-migration.pipeline';
 import { validateFlowSchema } from '../../domain/services/flow-schema-validator.service';
 import { SaveFlowUseCase } from '../flow/save-flow.use-case';
 import { ValidateFlowUseCase } from '../flow/validate-flow.use-case';
@@ -24,19 +25,25 @@ export type ImportFlowResult = ImportFlowSuccess | ImportFlowFailure;
 export class ImportFlowFromJsonUseCase {
   private readonly validateFlowUseCase = inject(ValidateFlowUseCase);
   private readonly saveFlowUseCase = inject(SaveFlowUseCase);
+  private readonly flowMigrationPipeline = inject(FlowMigrationPipeline);
 
   public execute(payload: string): ImportFlowResult {
     const parsedFlow = safeParseJson<unknown>(payload);
     if (!parsedFlow) {
-      return { success: false, error: 'JSON inválido. Verifica la sintaxis del archivo o textarea.' };
+      return {
+        success: false,
+        error: 'JSON inválido. Verifica la sintaxis del archivo o textarea.'
+      };
     }
 
-    const schemaValidationError = validateFlowSchema(parsedFlow);
+    const migratedFlow = this.flowMigrationPipeline.migrate(parsedFlow);
+
+    const schemaValidationError = validateFlowSchema(migratedFlow);
     if (schemaValidationError) {
       return { success: false, error: schemaValidationError };
     }
 
-    const flow = parsedFlow as Flow;
+    const flow = migratedFlow;
 
     const domainErrors = this.validateFlowUseCase.execute(flow);
     if (domainErrors.length > 0) {

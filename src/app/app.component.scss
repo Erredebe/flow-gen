@@ -1,0 +1,37 @@
+.layout {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: #101828;
+  color: #fff;
+
+  h1 {
+    margin: 0;
+    font-size: 1.125rem;
+  }
+
+  nav {
+    display: flex;
+    gap: 1rem;
+
+    a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 600;
+
+      &.active,
+      &:hover {
+        color: #fff;
+      }
+    }
+  }
+}
+
+main {
+  padding: 1.5rem;
+}

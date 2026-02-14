@@ -59,4 +59,34 @@ describe('RegistryNodeExecutorAdapter', () => {
       context: { input: {}, variables: {}, traceId: 't1', runId: 'r1', secretReferences: [] }
     });
   });
+
+  it('executes action node as tool-backed node when config.toolName is present', async () => {
+    toolRegistry.register(
+      new LocalFunctionToolAdapter({
+        name: 'action-tool',
+        description: 'Action tool',
+        inputSchema: { type: 'object', additionalProperties: true, properties: {} },
+        outputSchema: { type: 'object', additionalProperties: true, properties: {} },
+        handler: () => ({ output: { ok: true } })
+      })
+    );
+
+    const outcome = await adapter.execute({
+      node: {
+        id: 'a1',
+        label: 'Action node',
+        nodeType: 'action',
+        version: '1.0.0',
+        config: { toolName: 'action-tool', message: 'second alert' },
+        position: { x: 0, y: 0 },
+        metadata: {}
+      },
+      context: { input: {}, variables: {}, traceId: 't1', runId: 'r1', secretReferences: [] },
+      upstreamOutputs: {},
+      policy: {}
+    });
+
+    expect(outcome.outputs).toEqual({ ok: true });
+  });
+
 });

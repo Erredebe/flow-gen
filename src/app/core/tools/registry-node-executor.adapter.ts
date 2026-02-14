@@ -15,7 +15,7 @@ export class RegistryNodeExecutorAdapter extends NodeExecutorPort {
 
   public override canExecute(node: AnyFlowNode): boolean {
     const runtimeKind = this.nodeDefinitionRegistry.getDefinition(node.nodeType)?.runtimeKind;
-    if (runtimeKind === 'tool' || runtimeKind === 'function') {
+    if (this.isToolBackedNode(node, runtimeKind)) {
       return typeof node.config['toolName'] === 'string';
     }
 
@@ -24,7 +24,7 @@ export class RegistryNodeExecutorAdapter extends NodeExecutorPort {
 
   public override async execute(data: NodeExecutionData): Promise<NodeExecutionOutcome> {
     const runtimeKind = this.nodeDefinitionRegistry.getDefinition(data.node.nodeType)?.runtimeKind;
-    if (runtimeKind === 'tool' || runtimeKind === 'function') {
+    if (this.isToolBackedNode(data.node, runtimeKind)) {
       const toolName = data.node.config['toolName'];
       if (typeof toolName !== 'string') {
         throw {
@@ -63,5 +63,9 @@ export class RegistryNodeExecutorAdapter extends NodeExecutorPort {
     }
 
     return { value };
+  }
+
+  private isToolBackedNode(node: AnyFlowNode, runtimeKind?: string): boolean {
+    return runtimeKind === 'tool' || runtimeKind === 'function' || typeof node.config['toolName'] === 'string';
   }
 }

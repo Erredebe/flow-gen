@@ -13,8 +13,24 @@ describe('FlowEditorComponent', () => {
   let idGeneratorMock: jasmine.SpyObj<IdGenerator>;
 
   const nodes: AnyFlowNode[] = [
-    { id: 'start-1', nodeType: 'start', label: 'Inicio', position: { x: 0, y: 0 }, metadata: {}, version: '1.0.0', config: {} },
-    { id: 'action-1', nodeType: 'action', label: 'Acción', position: { x: 200, y: 0 }, metadata: {}, version: '1.0.0', config: {} }
+    {
+      id: 'start-1',
+      nodeType: 'start',
+      label: 'Inicio',
+      position: { x: 0, y: 0 },
+      metadata: {},
+      version: '1.0.0',
+      config: {}
+    },
+    {
+      id: 'action-1',
+      nodeType: 'action',
+      label: 'Acción',
+      position: { x: 200, y: 0 },
+      metadata: {},
+      version: '1.0.0',
+      config: {}
+    }
   ];
 
   const flowFixture: Flow = {
@@ -41,7 +57,9 @@ describe('FlowEditorComponent', () => {
 
     stateMock.getDraft.and.returnValue(flowFixture);
     stateMock.getValidationErrors.and.returnValue([]);
-    stateMock.findNodeById.and.callFake((nodeId: string) => nodes.find((node) => node.id === nodeId));
+    stateMock.findNodeById.and.callFake((nodeId: string) =>
+      nodes.find((node) => node.id === nodeId)
+    );
     stateMock.createNode.and.returnValue('action-2');
 
     runFlowUseCaseMock = jasmine.createSpyObj<RunFlowUseCase>('RunFlowUseCase', ['execute']);
@@ -92,8 +110,10 @@ describe('FlowEditorComponent', () => {
     sourceNode.click();
     fixture.detectChanges();
 
-    const connectButton = Array.from(fixture.nativeElement.querySelectorAll('.panel-actions button')).find(
-      (button: HTMLButtonElement) => button.textContent?.includes('Conectar desde este nodo')
+    const connectButton = Array.from(
+      fixture.nativeElement.querySelectorAll('.panel-actions button')
+    ).find((button: HTMLButtonElement) =>
+      button.textContent?.includes('Conectar desde este nodo')
     ) as HTMLButtonElement;
 
     connectButton.click();
@@ -102,6 +122,25 @@ describe('FlowEditorComponent', () => {
     targetNode.click();
 
     expect(stateMock.createEdge).toHaveBeenCalledWith('start-1', 'action-1');
+  });
+
+  it('updates node config from the JSON editor', () => {
+    const nodeElements = fixture.nativeElement.querySelectorAll('.node');
+    const sourceNode = nodeElements[0] as HTMLElement;
+
+    sourceNode.click();
+    fixture.detectChanges();
+
+    const textareas = fixture.nativeElement.querySelectorAll('textarea');
+    const configTextarea = textareas[0] as HTMLTextAreaElement;
+
+    configTextarea.value = '{"command":"echo hola","toolName":"shell.exec"}';
+    configTextarea.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(stateMock.updateNode).toHaveBeenCalledWith('start-1', {
+      config: { command: 'echo hola', toolName: 'shell.exec' }
+    });
   });
 
   it('runs the flow when clicking execute button', async () => {
@@ -114,5 +153,4 @@ describe('FlowEditorComponent', () => {
 
     expect(runFlowUseCaseMock.execute).toHaveBeenCalled();
   });
-
 });

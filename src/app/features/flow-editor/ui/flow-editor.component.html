@@ -87,6 +87,15 @@
         </label>
 
         <label>
+          Configuración del nodo (JSON)
+          <textarea [ngModel]="configDraft()" (ngModelChange)="updateConfig($event)"></textarea>
+        </label>
+
+        @if (configError()) {
+          <p class="validation-error">{{ configError() }}</p>
+        }
+
+        <label>
           Metadatos (JSON)
           <textarea [ngModel]="metadataDraft()" (ngModelChange)="updateMetadata($event)"></textarea>
         </label>
@@ -124,7 +133,6 @@
           <button type="button" class="btn btn-soft" (click)="cancelLinking()">Cancelar</button>
         </div>
       }
-
 
       @if (runError(); as message) {
         <p class="validation-error">{{ message }}</p>

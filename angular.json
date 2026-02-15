@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "flow-gen": {
+    "iv-flow": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/flow-gen",
+            "outputPath": "dist/iv-flow",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -59,10 +59,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "flow-gen:build:production"
+              "buildTarget": "iv-flow:build:production"
             },
             "development": {
-              "buildTarget": "flow-gen:build:development"
+              "buildTarget": "iv-flow:build:development"
             }
           },
           "defaultConfiguration": "development"

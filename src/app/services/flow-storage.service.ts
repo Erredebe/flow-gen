@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { FlowDefinition, ScriptSnippet } from '../models/flow.model';
 
-const FLOW_STORAGE_KEY = 'flow-gen-flows';
-const SCRIPT_STORAGE_KEY = 'flow-gen-scripts';
+const FLOW_STORAGE_KEY = 'iv-flow-flows';
+const SCRIPT_STORAGE_KEY = 'iv-flow-scripts';
 
 @Injectable({ providedIn: 'root' })
 export class FlowStorageService {

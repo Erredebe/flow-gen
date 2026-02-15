@@ -17,7 +17,7 @@ describe('AppComponent', () => {
   it(`should have the 'flow-gen' title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('flow-gen');
+    expect(app.title).toEqual('iv-flow');
   });
 
   it('should render title', () => {

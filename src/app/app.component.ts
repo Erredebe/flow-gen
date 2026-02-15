@@ -21,7 +21,7 @@ interface NodeTemplate {
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'flow-gen';
+  title = 'iv-flow';
   flowId = this.id('flow');
   flowName = 'Mi flujo';
   nodes: FlowNode[] = [];
@@ -37,8 +37,8 @@ export class AppComponent {
   scriptDraftName = '';
   selectedScriptId = '';
   tutorialStep = 0;
-  showTutorial = localStorage.getItem('flow-gen-tutorial-hidden') !== 'true';
-  darkMode = localStorage.getItem('flow-gen-theme') === 'dark';
+  showTutorial = localStorage.getItem('iv-flow-tutorial-hidden') !== 'true';
+  darkMode = localStorage.getItem('iv-flow-theme') === 'dark';
   
   zoom = 1;
   panX = 0;
@@ -330,7 +330,7 @@ export class AppComponent {
 
   toggleDarkMode(): void {
     this.darkMode = !this.darkMode;
-    localStorage.setItem('flow-gen-theme', this.darkMode ? 'dark' : 'light');
+    localStorage.setItem('iv-flow-theme', this.darkMode ? 'dark' : 'light');
   }
 
   exportFlow(): void {
@@ -393,7 +393,7 @@ export class AppComponent {
 
   closeTutorial(): void {
     this.showTutorial = false;
-    localStorage.setItem('flow-gen-tutorial-hidden', 'true');
+    localStorage.setItem('iv-flow-tutorial-hidden', 'true');
   }
 
   undo(): void {

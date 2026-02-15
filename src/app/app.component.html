@@ -12,6 +12,7 @@
       <button (click)="validateFlow()">Validar</button>
       <button class="primary" (click)="runFlow()" [disabled]="running">Run</button>
       <button (click)="saveFlow()">Guardar</button>
+      <button (click)="toggleContentManager()">Gestor de Contenido</button>
       <button (click)="toggleDarkMode()">{{ darkMode ? '☀️' : '🌙' }}</button>
       <button (click)="exportFlow()">Exportar</button>
       <label class="file-input">
@@ -21,12 +22,17 @@
     </div>
   </header>
 
-  <section class="tutorial">
-    <strong>Tutorial:</strong> {{ tutorialText() }}
-    <button (click)="nextTutorialStep()">Siguiente paso</button>
-    <div class="demo-actions">
-      <button *ngFor="let demo of demos; let i = index" (click)="loadDemo(i)">Cargar {{ demo.name }}</button>
+  <section class="tutorial" *ngIf="showTutorial">
+    <div class="tutorial-wrap">
+      <div class="tutorial-content">
+        <strong>Tutorial:</strong> {{ tutorialText() }}
+        <button (click)="nextTutorialStep()">Siguiente paso</button>
+      </div>
+      <div class="demo-actions">
+        <button *ngFor="let demo of demos; let i = index" (click)="loadDemo(i)">Cargar {{ demo.name }}</button>
+      </div>
     </div>
+    <button class="close-tutorial" (click)="closeTutorial()">✕</button>
   </section>
 
   <main class="workspace">
@@ -59,34 +65,44 @@
       </div>
     </aside>
 
-    <section class="canvas-wrapper">
-      <svg class="connections">
-        <path *ngFor="let connection of connections" [attr.d]="connectionPath(connection)" />
-      </svg>
+    <section class="canvas-wrapper" (wheel)="onWheel($event)">
+      <div class="canvas-transform" [style.transform]="'scale(' + zoom + ') translate(' + panX + 'px, ' + panY + 'px)'">
+        <svg class="connections">
+          <path *ngFor="let connection of connections" [attr.d]="connectionPath(connection)" />
+        </svg>
 
-      <div
-        *ngFor="let node of nodes"
-        class="node"
-        [class.selected]="node.id === selectedNodeId"
-        [class.active]="activeNodeIds.has(node.id)"
-        [class.connect-target]="connectingFrom && connectingFrom.nodeId !== node.id"
-        [style.left.px]="node.x"
-        [style.top.px]="node.y"
-        [style.border-color]="getNodeColor(node.type)"
-        (click)="onNodeClick(node.id)">
-        <div class="node-header" [style.background]="getNodeColor(node.type)" (mousedown)="onNodeDrag($event, node)">
-          {{ node.data.label }}
-        </div>
-        <div class="node-body">
-          <small>{{ node.type }}</small>
-          <div class="ports" *ngIf="node.type === 'decision'; else defaultPort">
-            <button (click)="startConnect(node.id, 'true'); $event.stopPropagation()">Salida true</button>
-            <button (click)="startConnect(node.id, 'false'); $event.stopPropagation()">Salida false</button>
+        <div
+          *ngFor="let node of nodes"
+          class="node"
+          [class.selected]="node.id === selectedNodeId"
+          [class.active]="activeNodeIds.has(node.id)"
+          [class.connect-target]="connectingFrom && connectingFrom.nodeId !== node.id"
+          [style.left.px]="node.x"
+          [style.top.px]="node.y"
+          [style.border-color]="getNodeColor(node.type)"
+          (click)="onNodeClick(node.id)">
+          <div class="node-header" [style.background]="getNodeColor(node.type)" (mousedown)="onNodeDrag($event, node)">
+            {{ node.data.label }}
           </div>
-          <ng-template #defaultPort>
-            <button (click)="startConnect(node.id, 'default'); $event.stopPropagation()">Salida</button>
-          </ng-template>
+          <div class="node-body">
+            <small>{{ node.type }}</small>
+            <div class="ports" *ngIf="node.type === 'decision'; else defaultPort">
+              <button (click)="startConnect(node.id, 'true'); $event.stopPropagation()">Salida true</button>
+              <button (click)="startConnect(node.id, 'false'); $event.stopPropagation()">Salida false</button>
+            </div>
+            <ng-template #defaultPort>
+              <button (click)="startConnect(node.id, 'default'); $event.stopPropagation()">Salida</button>
+            </ng-template>
+          </div>
         </div>
+      </div>
+
+      <!-- Canvas Controls -->
+      <div class="canvas-controls glass">
+        <button (click)="zoomIn()" title="Zoom In">+</button>
+        <span class="zoom-level">{{ (zoom * 100).toFixed(0) }}%</span>
+        <button (click)="zoomOut()" title="Zoom Out">-</button>
+        <button (click)="resetZoom()" title="Reset">⟲</button>
       </div>
     </section>
 
@@ -161,4 +177,50 @@
       </ul>
     </article>
   </section>
+
+  <!-- Content Manager Modal -->
+  <div class="modal-overlay" *ngIf="showContentManager" (click)="toggleContentManager()">
+    <div class="modal-content glass" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Gestor de Contenido</h2>
+        <button class="close-modal-btn" (click)="toggleContentManager()">✕</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="content-section">
+          <h3>Flujos Guardados</h3>
+          <div class="content-grid">
+            <div *ngFor="let flow of savedFlows" class="content-card">
+              <div class="card-info">
+                <strong>{{ flow.name }}</strong>
+                <small>{{ flow.updatedAt | date:'short' }}</small>
+              </div>
+              <div class="card-actions">
+                <button (click)="loadFlow(flow.id); toggleContentManager()">Cargar</button>
+                <button class="danger" (click)="deleteFlow(flow.id)">Borrar</button>
+              </div>
+            </div>
+            <div *ngIf="savedFlows.length === 0" class="empty-state">No hay flujos guardados.</div>
+          </div>
+        </div>
+
+        <div class="content-section">
+          <h3>Biblioteca de Scripts</h3>
+          <div class="content-grid">
+            <div *ngFor="let script of scriptLibrary" class="content-card">
+              <div class="card-info">
+                <strong>{{ script.name }}</strong>
+                <small>{{ script.updatedAt | date:'short' }}</small>
+              </div>
+              <div class="card-actions">
+                <button (click)="applySavedScript(script.id); toggleContentManager()" [disabled]="!selectedNode || selectedNode.type !== 'script'">Aplicar</button>
+                <button class="danger" (click)="deleteSavedScript(script.id)">Borrar</button>
+              </div>
+            </div>
+            <div *ngIf="scriptLibrary.length === 0" class="empty-state">No hay scripts guardados.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

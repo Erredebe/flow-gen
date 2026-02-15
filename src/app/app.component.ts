@@ -37,7 +37,13 @@ export class AppComponent {
   scriptDraftName = '';
   selectedScriptId = '';
   tutorialStep = 0;
+  showTutorial = localStorage.getItem('flow-gen-tutorial-hidden') !== 'true';
   darkMode = localStorage.getItem('flow-gen-theme') === 'dark';
+  
+  zoom = 1;
+  panX = 0;
+  panY = 0;
+  showContentManager = false;
 
   private history: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
   private future: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
@@ -356,6 +362,40 @@ export class AppComponent {
     });
   }
 
+  zoomIn(): void {
+    this.zoom = Math.min(this.zoom + 0.1, 2);
+  }
+
+  zoomOut(): void {
+    this.zoom = Math.max(this.zoom - 0.1, 0.4);
+  }
+
+  resetZoom(): void {
+    this.zoom = 1;
+    this.panX = 0;
+    this.panY = 0;
+  }
+
+  onWheel(event: WheelEvent): void {
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      if (event.deltaY < 0) {
+        this.zoomIn();
+      } else {
+        this.zoomOut();
+      }
+    }
+  }
+
+  toggleContentManager(): void {
+    this.showContentManager = !this.showContentManager;
+  }
+
+  closeTutorial(): void {
+    this.showTutorial = false;
+    localStorage.setItem('flow-gen-tutorial-hidden', 'true');
+  }
+
   undo(): void {
     const snapshot = this.history.pop();
     if (!snapshot) {
@@ -389,8 +429,8 @@ export class AppComponent {
     this.pushHistory();
 
     const move = (moveEvent: MouseEvent): void => {
-      node.x = originalX + moveEvent.clientX - startX;
-      node.y = originalY + moveEvent.clientY - startY;
+      node.x = originalX + (moveEvent.clientX - startX) / this.zoom;
+      node.y = originalY + (moveEvent.clientY - startY) / this.zoom;
       this.nodes = [...this.nodes];
     };
 

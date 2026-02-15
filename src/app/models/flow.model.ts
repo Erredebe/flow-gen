@@ -43,3 +43,10 @@ export interface ExecutionResult {
   logs: ExecutionLog[];
   status: 'completed' | 'failed';
 }
+
+export interface ScriptSnippet {
+  id: string;
+  name: string;
+  content: string;
+  updatedAt: string;
+}

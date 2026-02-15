@@ -1,0 +1,137 @@
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Flow Gen</h1>
+      <p>Editor visual de automatización, IA y lógica JS/TS</p>
+    </div>
+    <div class="actions">
+      <input [(ngModel)]="flowName" placeholder="Nombre del flujo" />
+      <button (click)="undo()">Deshacer</button>
+      <button (click)="redo()">Rehacer</button>
+      <button (click)="validateFlow()">Validar</button>
+      <button (click)="runFlow()" [disabled]="running">Ejecutar</button>
+      <button (click)="saveFlow()">Guardar</button>
+      <button (click)="exportFlow()">Exportar JSON</button>
+      <label class="file-input">
+        Importar JSON
+        <input type="file" accept="application/json" (change)="importFlow($event)" />
+      </label>
+    </div>
+  </header>
+
+  <section class="tutorial">
+    <strong>Tutorial:</strong> {{ tutorialText() }}
+    <button (click)="nextTutorialStep()">Siguiente paso</button>
+    <div class="demo-actions">
+      <button *ngFor="let demo of demos; let i = index" (click)="loadDemo(i)">Cargar {{ demo.name }}</button>
+    </div>
+  </section>
+
+  <main class="workspace">
+    <aside class="sidebar">
+      <h2>Paleta de nodos</h2>
+      <button
+        *ngFor="let template of templates"
+        [style.border-left-color]="template.color"
+        (click)="addNode(template.type)">
+        <span>{{ template.icon }}</span>
+        {{ template.label }}
+      </button>
+
+      <h3>Flujos guardados</h3>
+      <div *ngFor="let flow of savedFlows" class="saved-item">
+        <button (click)="loadFlow(flow.id)">{{ flow.name }}</button>
+      </div>
+
+      <h3>Conexión</h3>
+      <p *ngIf="connectingFrom">Conectando desde {{ connectingFrom.nodeId }}</p>
+      <button *ngIf="connectingFrom" (click)="cancelConnect()">Cancelar conexión</button>
+    </aside>
+
+    <section class="canvas-wrapper">
+      <svg class="connections">
+        <path *ngFor="let connection of connections" [attr.d]="connectionPath(connection)" />
+      </svg>
+
+      <div
+        *ngFor="let node of nodes"
+        class="node"
+        [class.selected]="node.id === selectedNodeId"
+        [class.active]="activeNodeIds.has(node.id)"
+        [style.left.px]="node.x"
+        [style.top.px]="node.y"
+        [style.border-color]="getNodeColor(node.type)"
+        (click)="selectNode(node.id)">
+        <div class="node-header" [style.background]="getNodeColor(node.type)" (mousedown)="onNodeDrag($event, node)">
+          {{ node.data.label }}
+        </div>
+        <div class="node-body">
+          <small>{{ node.type }}</small>
+          <div class="ports" *ngIf="node.type === 'decision'; else defaultPort">
+            <button (click)="startConnect(node.id, 'true')">Salida true</button>
+            <button (click)="startConnect(node.id, 'false')">Salida false</button>
+          </div>
+          <ng-template #defaultPort>
+            <button (click)="startConnect(node.id, 'default')">Salida</button>
+          </ng-template>
+          <button (click)="completeConnect(node.id)" [disabled]="!connectingFrom">Entrada</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="properties" *ngIf="selectedNode as node">
+      <h2>Configuración</h2>
+      <label>
+        Etiqueta
+        <input [(ngModel)]="node.data.label" (ngModelChange)="updateNode()" />
+      </label>
+
+      <label *ngIf="node.type === 'decision'">
+        Condición
+        <input [(ngModel)]="node.data.condition" (ngModelChange)="updateNode()" placeholder="context.valor > 10" />
+      </label>
+
+      <label *ngIf="node.type === 'script'">
+        Script JS/TS
+        <textarea [(ngModel)]="node.data.script" (ngModelChange)="updateNode()" rows="6"></textarea>
+      </label>
+
+      <label *ngIf="node.type === 'api'">
+        URL API
+        <input [(ngModel)]="node.data.apiUrl" (ngModelChange)="updateNode()" placeholder="https://api.example.com" />
+      </label>
+
+      <label *ngIf="node.type === 'api'">
+        Método
+        <select [(ngModel)]="node.data.apiMethod" (ngModelChange)="updateNode()">
+          <option>GET</option>
+          <option>POST</option>
+        </select>
+      </label>
+
+      <label *ngIf="node.type === 'api' && node.data.apiMethod === 'POST'">
+        Body
+        <textarea [(ngModel)]="node.data.apiBody" (ngModelChange)="updateNode()" rows="5"></textarea>
+      </label>
+
+      <button class="danger" (click)="deleteSelectedNode()">Eliminar nodo</button>
+    </aside>
+  </main>
+
+  <section class="bottom-panels">
+    <article>
+      <h3>Validación</h3>
+      <ul>
+        <li *ngFor="let error of validationErrors">{{ error }}</li>
+      </ul>
+      <p *ngIf="!validationErrors.length">Sin errores de validación.</p>
+    </article>
+
+    <article>
+      <h3>Logs de ejecución</h3>
+      <ul>
+        <li *ngFor="let line of logs">{{ line }}</li>
+      </ul>
+    </article>
+  </section>
+</div>

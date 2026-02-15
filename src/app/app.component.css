@@ -342,14 +342,62 @@ h2, h3, h4 {
 /* Helper Classes */
 .saved-item {
   display: flex;
-  justify-content: space-between;
+  gap: var(--space-2);
   align-items: center;
-  padding: var(--space-2);
-  background: var(--slate-50);
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-2);
+  transition: all 0.2s ease;
+}
+
+.saved-item:hover {
+  background: var(--bg-panel);
+  border-color: var(--primary-300);
+}
+
+.saved-item button:not(.danger) {
+  flex-grow: 1;
+  text-align: left;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  padding: var(--space-2) var(--space-3);
+}
+
+.saved-item button:not(.danger):hover {
+  background: rgba(99, 102, 241, 0.05);
+  color: var(--primary-600);
+}
+
+.saved-item button.danger {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.saved-item button.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--danger);
+}
+
+.saved-item small {
+  flex-grow: 1;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding-left: var(--space-2);
 }
 
 .app-shell.dark-mode .saved-item {
+  background: var(--slate-900);
+}
+.app-shell.dark-mode .saved-item:hover {
   background: var(--slate-800);
 }

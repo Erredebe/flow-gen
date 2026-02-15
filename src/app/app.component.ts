@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { FlowConnection, FlowDefinition, FlowNode, NodeType } from './models/flow.model';
+import { FlowConnection, FlowDefinition, FlowNode, NodeType, ScriptSnippet } from './models/flow.model';
 import { FlowEngineService } from './services/flow-engine.service';
 import { FlowStorageService } from './services/flow-storage.service';
 import { FlowValidationService } from './services/flow-validation.service';
@@ -33,7 +33,11 @@ export class AppComponent {
   running = false;
   activeNodeIds = new Set<string>();
   savedFlows: FlowDefinition[] = [];
+  scriptLibrary: ScriptSnippet[] = [];
+  scriptDraftName = '';
+  selectedScriptId = '';
   tutorialStep = 0;
+  darkMode = localStorage.getItem('flow-gen-theme') === 'dark';
 
   private history: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
   private future: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
@@ -97,6 +101,7 @@ export class AppComponent {
     private readonly engine: FlowEngineService
   ) {
     this.refreshSavedFlows();
+    this.refreshScriptLibrary();
   }
 
   addNode(type: NodeType): void {
@@ -112,6 +117,15 @@ export class AppComponent {
     const x = 80 + (index % 5) * 180;
     const y = 80 + Math.floor(index / 5) * 120;
     this.nodes.push(this.node(this.id('node'), type, x, y, template?.label ?? type));
+  }
+
+  onNodeClick(nodeId: string): void {
+    if (this.connectingFrom) {
+      this.completeConnect(nodeId);
+      return;
+    }
+
+    this.selectNode(nodeId);
   }
 
   selectNode(nodeId: string): void {
@@ -139,6 +153,19 @@ export class AppComponent {
       return;
     }
 
+    const duplicate = this.connections.some(
+      (connection) =>
+        connection.fromNodeId === this.connectingFrom?.nodeId &&
+        connection.fromPort === this.connectingFrom?.fromPort &&
+        connection.toNodeId === targetNodeId
+    );
+
+    if (duplicate) {
+      this.logs.unshift('Esta conexión ya existe.');
+      this.connectingFrom = undefined;
+      return;
+    }
+
     this.pushHistory();
     this.connections.push({
       id: this.id('conn'),
@@ -149,12 +176,25 @@ export class AppComponent {
     this.connectingFrom = undefined;
   }
 
+  removeConnection(connectionId: string): void {
+    this.pushHistory();
+    this.connections = this.connections.filter((connection) => connection.id !== connectionId);
+  }
+
   cancelConnect(): void {
     this.connectingFrom = undefined;
   }
 
   get selectedNode(): FlowNode | undefined {
     return this.nodes.find((node) => node.id === this.selectedNodeId);
+  }
+
+  get connectingHint(): string {
+    if (!this.connectingFrom) {
+      return 'Selecciona una salida y luego haz click en el nodo destino.';
+    }
+
+    return `Conectando desde ${this.connectingFrom.nodeId} (${this.connectingFrom.fromPort}). Haz click sobre un nodo destino.`;
   }
 
   getNodeColor(type: NodeType): string {
@@ -164,6 +204,51 @@ export class AppComponent {
   updateNode(): void {
     this.pushHistory();
     this.nodes = [...this.nodes];
+  }
+
+  saveCurrentScript(): void {
+    if (!this.selectedNode || this.selectedNode.type !== 'script') {
+      return;
+    }
+
+    const scriptContent = this.selectedNode.data.script?.trim();
+    const name = this.scriptDraftName.trim();
+    if (!scriptContent || !name) {
+      this.logs.unshift('Debes completar nombre y contenido del script para guardarlo.');
+      return;
+    }
+
+    this.storage.saveScript({
+      id: this.id('script'),
+      name,
+      content: scriptContent,
+      updatedAt: new Date().toISOString()
+    });
+    this.scriptDraftName = '';
+    this.refreshScriptLibrary();
+    this.logs.unshift(`Script guardado: ${name}`);
+  }
+
+  applySavedScript(scriptId: string): void {
+    if (!this.selectedNode || this.selectedNode.type !== 'script') {
+      return;
+    }
+
+    const script = this.scriptLibrary.find((item) => item.id === scriptId);
+    if (!script) {
+      return;
+    }
+
+    this.pushHistory();
+    this.selectedNode.data.script = script.content;
+    this.selectedNode.data.label = script.name;
+    this.nodes = [...this.nodes];
+    this.logs.unshift(`Script aplicado: ${script.name}`);
+  }
+
+  deleteSavedScript(scriptId: string): void {
+    this.storage.deleteScript(scriptId);
+    this.refreshScriptLibrary();
   }
 
   async runFlow(): Promise<void> {
@@ -193,6 +278,27 @@ export class AppComponent {
     this.logs.unshift(`Flujo guardado: ${flow.name}`);
   }
 
+  saveAsNewFlow(): void {
+    this.flowId = this.id('flow');
+    this.saveFlow();
+  }
+
+  newFlow(): void {
+    this.pushHistory();
+    this.flowId = this.id('flow');
+    this.flowName = 'Nuevo flujo';
+    this.nodes = [];
+    this.connections = [];
+    this.selectedNodeId = undefined;
+    this.validationErrors = [];
+    this.connectingFrom = undefined;
+  }
+
+  deleteFlow(flowId: string): void {
+    this.storage.deleteFlow(flowId);
+    this.refreshSavedFlows();
+  }
+
   loadFlow(flowId: string): void {
     const flow = this.savedFlows.find((item) => item.id === flowId);
     if (!flow) {
@@ -214,6 +320,11 @@ export class AppComponent {
     this.flowId = this.id('flow');
     this.nodes = structuredClone(demo.flow.nodes);
     this.connections = structuredClone(demo.flow.connections);
+  }
+
+  toggleDarkMode(): void {
+    this.darkMode = !this.darkMode;
+    localStorage.setItem('flow-gen-theme', this.darkMode ? 'dark' : 'light');
   }
 
   exportFlow(): void {
@@ -334,6 +445,10 @@ export class AppComponent {
 
   private refreshSavedFlows(): void {
     this.savedFlows = this.storage.listFlows();
+  }
+
+  private refreshScriptLibrary(): void {
+    this.scriptLibrary = this.storage.listScripts();
   }
 
   private pushHistory(): void {

@@ -1,4 +1,4 @@
-<div class="app-shell">
+<div class="app-shell" [class.dark-mode]="darkMode">
   <header class="topbar">
     <div class="brand">
       <h1>Flow Gen</h1>
@@ -6,11 +6,14 @@
     </div>
     <div class="actions">
       <input [(ngModel)]="flowName" placeholder="Nombre del flujo" />
+      <button (click)="newFlow()">Nuevo</button>
       <button (click)="undo()">Deshacer</button>
       <button (click)="redo()">Rehacer</button>
       <button (click)="validateFlow()">Validar</button>
       <button (click)="runFlow()" [disabled]="running">Ejecutar</button>
       <button (click)="saveFlow()">Guardar</button>
+      <button (click)="saveAsNewFlow()">Guardar como nuevo</button>
+      <button (click)="toggleDarkMode()">{{ darkMode ? 'Modo claro' : 'Modo oscuro' }}</button>
       <button (click)="exportFlow()">Exportar JSON</button>
       <label class="file-input">
         Importar JSON
@@ -41,11 +44,20 @@
       <h3>Flujos guardados</h3>
       <div *ngFor="let flow of savedFlows" class="saved-item">
         <button (click)="loadFlow(flow.id)">{{ flow.name }}</button>
+        <button class="danger" (click)="deleteFlow(flow.id)">✕</button>
       </div>
 
       <h3>Conexión</h3>
-      <p *ngIf="connectingFrom">Conectando desde {{ connectingFrom.nodeId }}</p>
+      <p>{{ connectingHint }}</p>
       <button *ngIf="connectingFrom" (click)="cancelConnect()">Cancelar conexión</button>
+
+      <div class="connection-list" *ngIf="connections.length">
+        <h4>Conexiones</h4>
+        <div *ngFor="let connection of connections" class="saved-item">
+          <small>{{ connection.fromNodeId }} → {{ connection.toNodeId }} ({{ connection.fromPort }})</small>
+          <button class="danger" (click)="removeConnection(connection.id)">✕</button>
+        </div>
+      </div>
     </aside>
 
     <section class="canvas-wrapper">
@@ -58,23 +70,23 @@
         class="node"
         [class.selected]="node.id === selectedNodeId"
         [class.active]="activeNodeIds.has(node.id)"
+        [class.connect-target]="connectingFrom && connectingFrom.nodeId !== node.id"
         [style.left.px]="node.x"
         [style.top.px]="node.y"
         [style.border-color]="getNodeColor(node.type)"
-        (click)="selectNode(node.id)">
+        (click)="onNodeClick(node.id)">
         <div class="node-header" [style.background]="getNodeColor(node.type)" (mousedown)="onNodeDrag($event, node)">
           {{ node.data.label }}
         </div>
         <div class="node-body">
           <small>{{ node.type }}</small>
           <div class="ports" *ngIf="node.type === 'decision'; else defaultPort">
-            <button (click)="startConnect(node.id, 'true')">Salida true</button>
-            <button (click)="startConnect(node.id, 'false')">Salida false</button>
+            <button (click)="startConnect(node.id, 'true'); $event.stopPropagation()">Salida true</button>
+            <button (click)="startConnect(node.id, 'false'); $event.stopPropagation()">Salida false</button>
           </div>
           <ng-template #defaultPort>
-            <button (click)="startConnect(node.id, 'default')">Salida</button>
+            <button (click)="startConnect(node.id, 'default'); $event.stopPropagation()">Salida</button>
           </ng-template>
-          <button (click)="completeConnect(node.id)" [disabled]="!connectingFrom">Entrada</button>
         </div>
       </div>
     </section>
@@ -95,6 +107,22 @@
         Script JS/TS
         <textarea [(ngModel)]="node.data.script" (ngModelChange)="updateNode()" rows="6"></textarea>
       </label>
+
+      <div class="script-tools" *ngIf="node.type === 'script'">
+        <input [(ngModel)]="scriptDraftName" placeholder="Nombre para guardar script" />
+        <button (click)="saveCurrentScript()">Guardar script</button>
+
+        <select [(ngModel)]="selectedScriptId">
+          <option [ngValue]="''">Seleccionar script guardado</option>
+          <option *ngFor="let script of scriptLibrary" [value]="script.id">{{ script.name }}</option>
+        </select>
+        <button [disabled]="!selectedScriptId" (click)="applySavedScript(selectedScriptId)">Aplicar script guardado</button>
+
+        <div class="saved-item" *ngFor="let script of scriptLibrary">
+          <small>{{ script.name }}</small>
+          <button class="danger" (click)="deleteSavedScript(script.id)">✕</button>
+        </div>
+      </div>
 
       <label *ngIf="node.type === 'api'">
         URL API

@@ -1,22 +1,21 @@
 <div class="app-shell" [class.dark-mode]="darkMode">
-  <header class="topbar">
+  <header class="topbar glass">
     <div class="brand">
       <h1>Flow Gen</h1>
-      <p>Editor visual de automatización, IA y lógica JS/TS</p>
+      <p>Editor visual de automatización e IA</p>
     </div>
     <div class="actions">
       <input [(ngModel)]="flowName" placeholder="Nombre del flujo" />
-      <button (click)="newFlow()">Nuevo</button>
+      <button class="primary" (click)="newFlow()">Nuevo</button>
       <button (click)="undo()">Deshacer</button>
       <button (click)="redo()">Rehacer</button>
       <button (click)="validateFlow()">Validar</button>
-      <button (click)="runFlow()" [disabled]="running">Ejecutar</button>
+      <button class="primary" (click)="runFlow()" [disabled]="running">Run</button>
       <button (click)="saveFlow()">Guardar</button>
-      <button (click)="saveAsNewFlow()">Guardar como nuevo</button>
-      <button (click)="toggleDarkMode()">{{ darkMode ? 'Modo claro' : 'Modo oscuro' }}</button>
-      <button (click)="exportFlow()">Exportar JSON</button>
+      <button (click)="toggleDarkMode()">{{ darkMode ? '☀️' : '🌙' }}</button>
+      <button (click)="exportFlow()">Exportar</button>
       <label class="file-input">
-        Importar JSON
+        Importar
         <input type="file" accept="application/json" (change)="importFlow($event)" />
       </label>
     </div>
@@ -142,7 +141,7 @@
         <textarea [(ngModel)]="node.data.apiBody" (ngModelChange)="updateNode()" rows="5"></textarea>
       </label>
 
-      <button class="danger" (click)="deleteSelectedNode()">Eliminar nodo</button>
+      <button class="danger" (click)="deleteSelectedNode()" style="width: 100%; margin-top: auto;">Eliminar nodo</button>
     </aside>
   </main>
 

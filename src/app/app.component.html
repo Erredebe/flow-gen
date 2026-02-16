@@ -54,6 +54,43 @@
         </div>
       </details>
 
+      <details class="sidebar-section context-panel" open>
+        <summary>Contexto de ejecución</summary>
+
+        <div class="context-empty" *ngIf="!contextHistory.length && !contextEntries(executionContext).length">
+          Aún no hay contexto. Ejecuta el flujo para ver variables y valores.
+        </div>
+
+        <div class="context-values" *ngIf="contextEntries(executionContext).length">
+          <h4>Estado actual de context</h4>
+          <div class="context-row" *ngFor="let item of contextEntries(executionContext)">
+            <strong>{{ item.key }}</strong>
+            <code>{{ item.value }}</code>
+          </div>
+        </div>
+
+        <div class="context-history" *ngIf="contextChangeLog.length">
+          <h4>Variables declaradas/cambiadas</h4>
+          <div class="context-row" *ngFor="let change of contextChangeLog">
+            <small>{{ change.nodeLabel }}</small>
+            <strong>{{ change.key }}</strong>
+            <code>{{ change.value }}</code>
+          </div>
+        </div>
+
+        <div class="context-history" *ngIf="contextHistory.length">
+          <h4>Historial por nodo</h4>
+          <details *ngFor="let snapshot of contextHistory; let idx = index" class="context-step">
+            <summary>#{{ idx + 1 }} {{ snapshot.nodeLabel }}</summary>
+            <div class="context-row" *ngFor="let item of contextEntries(snapshot.context)">
+              <strong>{{ item.key }}</strong>
+              <code>{{ item.value }}</code>
+            </div>
+            <p class="context-empty" *ngIf="!contextEntries(snapshot.context).length">Sin variables en este punto.</p>
+          </details>
+        </div>
+      </details>
+
       <h3>Conexión</h3>
       <p>{{ connectingHint }}</p>
       <button *ngIf="connectingFrom" (click)="cancelConnect()">Cancelar conexión</button>
@@ -67,34 +104,6 @@
           (click)="selectConnection(connection.id)">
           <small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }} ({{ connection.fromPort }})</small>
           <button class="danger" (click)="removeConnection(connection.id); $event.stopPropagation()">✕</button>
-        </div>
-      </details>
-
-      <details class="sidebar-section context-panel" open>
-        <summary>Contexto de ejecución</summary>
-
-        <div class="context-empty" *ngIf="!contextHistory.length && !contextEntries(executionContext).length">
-          Aún no hay contexto. Ejecuta el flujo para ver variables y valores.
-        </div>
-
-        <div class="context-values" *ngIf="contextEntries(executionContext).length">
-          <h4>Estado final</h4>
-          <div class="context-row" *ngFor="let item of contextEntries(executionContext)">
-            <strong>{{ item.key }}</strong>
-            <code>{{ item.value }}</code>
-          </div>
-        </div>
-
-        <div class="context-history" *ngIf="contextHistory.length">
-          <h4>Historial</h4>
-          <details *ngFor="let snapshot of contextHistory; let idx = index" class="context-step">
-            <summary>#{{ idx + 1 }} {{ snapshot.nodeLabel }}</summary>
-            <div class="context-row" *ngFor="let item of contextEntries(snapshot.context)">
-              <strong>{{ item.key }}</strong>
-              <code>{{ item.value }}</code>
-            </div>
-            <p class="context-empty" *ngIf="!contextEntries(snapshot.context).length">Sin variables en este punto.</p>
-          </details>
         </div>
       </details>
     </aside>

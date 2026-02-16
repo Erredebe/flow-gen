@@ -13,6 +13,13 @@ interface NodeTemplate {
   icon: string;
 }
 
+interface ContextChange {
+  nodeId: string;
+  nodeLabel: string;
+  key: string;
+  value: string;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -49,6 +56,7 @@ export class AppComponent {
 
   executionContext: Record<string, unknown> = {};
   contextHistory: ExecutionContextSnapshot[] = [];
+  contextChangeLog: ContextChange[] = [];
 
   private history: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
   private future: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
@@ -298,6 +306,7 @@ export class AppComponent {
     this.logs = [];
     this.executionContext = {};
     this.contextHistory = [];
+    this.contextChangeLog = [];
 
     const result = await this.engine.execute(this.currentFlow());
     result.visitedNodeIds.forEach((id) => this.activeNodeIds.add(id));
@@ -305,6 +314,7 @@ export class AppComponent {
     this.logs = result.logs.map((entry) => `[${entry.level.toUpperCase()}] ${entry.message}`);
     this.executionContext = result.context;
     this.contextHistory = result.contextHistory;
+    this.contextChangeLog = this.contextChanges();
     this.running = false;
   }
 
@@ -339,6 +349,7 @@ export class AppComponent {
     this.validationErrors = [];
     this.executionContext = {};
     this.contextHistory = [];
+    this.contextChangeLog = [];
     this.connectingFrom = undefined;
   }
 
@@ -362,6 +373,7 @@ export class AppComponent {
     this.validationErrors = [];
     this.executionContext = {};
     this.contextHistory = [];
+    this.contextChangeLog = [];
   }
 
   loadDemo(index: number): void {
@@ -525,11 +537,49 @@ export class AppComponent {
     this.tutorialStep += 1;
   }
 
-  contextEntries(context: Record<string, unknown>): { key: string; value: string }[] {
+  contextEntries(context?: Record<string, unknown>): { key: string; value: string }[] {
+    if (!context) {
+      return [];
+    }
+
     return Object.entries(context).map(([key, value]) => ({
       key,
-      value: typeof value === 'string' ? value : JSON.stringify(value, null, 2) ?? String(value)
+      value: this.serializeContextValue(value)
     }));
+  }
+
+  contextChanges(): ContextChange[] {
+    const changes: ContextChange[] = [];
+    let previousContext: Record<string, unknown> = {};
+
+    for (const snapshot of this.contextHistory) {
+      const previousEntries = new Map(Object.entries(previousContext).map(([key, value]) => [key, this.serializeContextValue(value)]));
+
+      for (const [key, value] of Object.entries(snapshot.context)) {
+        const serializedValue = this.serializeContextValue(value);
+        if (previousEntries.get(key) !== serializedValue) {
+          changes.push({
+            nodeId: snapshot.nodeId,
+            nodeLabel: snapshot.nodeLabel,
+            key,
+            value: serializedValue
+          });
+        }
+      }
+
+      previousContext = snapshot.context;
+    }
+
+    return changes;
+  }
+
+  private serializeContextValue(value: unknown): string {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    const serialized = JSON.stringify(value, null, 2);
+    return serialized ?? String(value);
   }
 
   private currentFlow(): FlowDefinition {
@@ -568,6 +618,7 @@ export class AppComponent {
     this.validationErrors = [];
     this.executionContext = {};
     this.contextHistory = [];
+    this.contextChangeLog = [];
   }
 
   private snapshot(): { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string } {

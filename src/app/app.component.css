@@ -551,6 +551,13 @@ h2, h3, h4 {
   color: var(--text-muted);
 }
 
+.context-row small {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .context-row code {
   font-family: var(--font-mono);
   font-size: 0.75rem;

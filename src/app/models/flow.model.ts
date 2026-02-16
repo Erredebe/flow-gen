@@ -44,6 +44,14 @@ export interface ExecutionResult {
   failedNodeIds: string[];
   logs: ExecutionLog[];
   status: 'completed' | 'failed';
+  context: Record<string, unknown>;
+  contextHistory: ExecutionContextSnapshot[];
+}
+
+export interface ExecutionContextSnapshot {
+  nodeId: string;
+  nodeLabel: string;
+  context: Record<string, unknown>;
 }
 
 export interface ScriptSnippet {

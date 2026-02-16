@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ExecutionLog, ExecutionResult, FlowDefinition, FlowNode } from '../models/flow.model';
+import { ExecutionContextSnapshot, ExecutionLog, ExecutionResult, FlowDefinition, FlowNode } from '../models/flow.model';
 
 @Injectable({ providedIn: 'root' })
 export class FlowEngineService {
@@ -8,6 +8,7 @@ export class FlowEngineService {
     const visitedNodeIds: string[] = [];
     const failedNodeIds = new Set<string>();
     const context: Record<string, unknown> = {};
+    const contextHistory: ExecutionContextSnapshot[] = [];
 
     const start = flow.nodes.find((node) => node.type === 'start');
     if (!start) {
@@ -15,7 +16,9 @@ export class FlowEngineService {
         logs: [{ level: 'error', message: 'No se encontró nodo Inicio.', timestamp: new Date().toISOString() }],
         visitedNodeIds,
         failedNodeIds: [],
-        status: 'failed'
+        status: 'failed',
+        context: {},
+        contextHistory
       };
     }
 
@@ -26,7 +29,7 @@ export class FlowEngineService {
       safetyCounter += 1;
       if (safetyCounter > 200) {
         logs.push(this.log('warning', 'Detención por posible bucle infinito.'));
-        return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
+        return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed', context: structuredClone(context), contextHistory };
       }
 
       visitedNodeIds.push(currentNode.id);
@@ -40,7 +43,7 @@ export class FlowEngineService {
         } catch (error) {
           logs.push(this.log('error', `Error de script: ${String(error)}`));
           failedNodeIds.add(currentNode.id);
-          return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
+          return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed', context: structuredClone(context), contextHistory };
         }
       }
 
@@ -56,13 +59,19 @@ export class FlowEngineService {
         } catch (error) {
           logs.push(this.log('error', `Error API: ${String(error)}`));
           failedNodeIds.add(currentNode.id);
-          return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
+          return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed', context: structuredClone(context), contextHistory };
         }
       }
 
+      contextHistory.push({
+        nodeId: currentNode.id,
+        nodeLabel: currentNode.data.label,
+        context: structuredClone(context)
+      });
+
       if (currentNode.type === 'end') {
         logs.push(this.log('info', 'Flujo completado.'));
-        return { logs, visitedNodeIds, failedNodeIds: [], status: 'completed' };
+        return { logs, visitedNodeIds, failedNodeIds: [], status: 'completed', context: structuredClone(context), contextHistory };
       }
 
       const outgoing = flow.connections.filter((connection) => connection.fromNodeId === currentNode?.id);
@@ -76,7 +85,7 @@ export class FlowEngineService {
         } catch (error) {
           logs.push(this.log('error', `Error en condición: ${String(error)}`));
           failedNodeIds.add(currentNode.id);
-          return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
+          return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed', context: structuredClone(context), contextHistory };
         }
 
         logs.push(this.log('info', `Decisión: ${decisionResult ? 'true' : 'false'}`));
@@ -90,7 +99,7 @@ export class FlowEngineService {
     }
 
     logs.push(this.log('warning', 'Ejecución detenida sin llegar a Fin.'));
-    return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
+    return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed', context: structuredClone(context), contextHistory };
   }
 
   private log(level: ExecutionLog['level'], message: string): ExecutionLog {

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { FlowConnection, FlowDefinition, FlowNode, NodeType, ScriptSnippet } from './models/flow.model';
+import { ExecutionContextSnapshot, FlowConnection, FlowDefinition, FlowNode, NodeType, ScriptSnippet } from './models/flow.model';
 import { FlowEngineService } from './services/flow-engine.service';
 import { FlowStorageService } from './services/flow-storage.service';
 import { FlowValidationService } from './services/flow-validation.service';
@@ -46,6 +46,9 @@ export class AppComponent {
   panX = 0;
   panY = 0;
   showContentManager = false;
+
+  executionContext: Record<string, unknown> = {};
+  contextHistory: ExecutionContextSnapshot[] = [];
 
   private history: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
   private future: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
@@ -293,11 +296,15 @@ export class AppComponent {
     this.activeNodeIds.clear();
     this.failedNodeIds.clear();
     this.logs = [];
+    this.executionContext = {};
+    this.contextHistory = [];
 
     const result = await this.engine.execute(this.currentFlow());
     result.visitedNodeIds.forEach((id) => this.activeNodeIds.add(id));
     result.failedNodeIds.forEach((id) => this.failedNodeIds.add(id));
     this.logs = result.logs.map((entry) => `[${entry.level.toUpperCase()}] ${entry.message}`);
+    this.executionContext = result.context;
+    this.contextHistory = result.contextHistory;
     this.running = false;
   }
 
@@ -330,6 +337,8 @@ export class AppComponent {
     this.selectedNodeId = undefined;
     this.selectedConnectionId = undefined;
     this.validationErrors = [];
+    this.executionContext = {};
+    this.contextHistory = [];
     this.connectingFrom = undefined;
   }
 
@@ -351,6 +360,8 @@ export class AppComponent {
     this.selectedNodeId = undefined;
     this.selectedConnectionId = undefined;
     this.validationErrors = [];
+    this.executionContext = {};
+    this.contextHistory = [];
   }
 
   loadDemo(index: number): void {
@@ -514,6 +525,13 @@ export class AppComponent {
     this.tutorialStep += 1;
   }
 
+  contextEntries(context: Record<string, unknown>): { key: string; value: string }[] {
+    return Object.entries(context).map(([key, value]) => ({
+      key,
+      value: typeof value === 'string' ? value : JSON.stringify(value, null, 2) ?? String(value)
+    }));
+  }
+
   private currentFlow(): FlowDefinition {
     return {
       id: this.flowId,
@@ -548,6 +566,8 @@ export class AppComponent {
     this.failedNodeIds.clear();
     this.logs = [];
     this.validationErrors = [];
+    this.executionContext = {};
+    this.contextHistory = [];
   }
 
   private snapshot(): { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string } {

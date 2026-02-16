@@ -46,29 +46,35 @@
         {{ template.label }}
       </button>
 
-      <h3>Flujos guardados</h3>
-      <div *ngFor="let flow of savedFlows" class="saved-item">
-        <button (click)="loadFlow(flow.id)">{{ flow.name }}</button>
-        <button class="danger" (click)="deleteFlow(flow.id)">✕</button>
-      </div>
+      <details class="sidebar-section" open>
+        <summary>Flujos guardados</summary>
+        <div *ngFor="let flow of savedFlows" class="saved-item">
+          <button (click)="loadFlow(flow.id)">{{ flow.name }}</button>
+          <button class="danger" (click)="deleteFlow(flow.id)">✕</button>
+        </div>
+      </details>
 
       <h3>Conexión</h3>
       <p>{{ connectingHint }}</p>
       <button *ngIf="connectingFrom" (click)="cancelConnect()">Cancelar conexión</button>
 
-      <div class="connection-list" *ngIf="connections.length">
-        <h4>Conexiones</h4>
-        <div *ngFor="let connection of connections" class="saved-item">
-          <small>{{ connection.fromNodeId }} → {{ connection.toNodeId }} ({{ connection.fromPort }})</small>
-          <button class="danger" (click)="removeConnection(connection.id)">✕</button>
+      <details class="sidebar-section connection-list" *ngIf="connections.length" open>
+        <summary>Conexiones</summary>
+        <div
+          *ngFor="let connection of connections"
+          class="saved-item"
+          [class.selected-item]="connection.id === selectedConnectionId"
+          (click)="selectConnection(connection.id)">
+          <small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }} ({{ connection.fromPort }})</small>
+          <button class="danger" (click)="removeConnection(connection.id); $event.stopPropagation()">✕</button>
         </div>
-      </div>
+      </details>
     </aside>
 
     <section class="canvas-wrapper" (wheel)="onWheel($event)">
       <div class="canvas-transform" [style.transform]="'scale(' + zoom + ') translate(' + panX + 'px, ' + panY + 'px)'">
         <svg class="connections">
-          <path *ngFor="let connection of connections" [attr.d]="connectionPath(connection)" />
+          <path *ngFor="let connection of connections" [attr.d]="connectionPath(connection)" [class.selected-connection]="connection.id === selectedConnectionId" (click)="selectConnection(connection.id)" />
         </svg>
 
         <div
@@ -86,6 +92,7 @@
           </div>
           <div class="node-body">
             <small>{{ node.type }}</small>
+            <p class="node-description" *ngIf="node.data.description">{{ node.data.description }}</p>
             <div class="ports" *ngIf="node.type === 'decision'; else defaultPort">
               <button (click)="startConnect(node.id, 'true'); $event.stopPropagation()">Salida true</button>
               <button (click)="startConnect(node.id, 'false'); $event.stopPropagation()">Salida false</button>
@@ -106,11 +113,16 @@
       </div>
     </section>
 
-    <aside class="properties" *ngIf="selectedNode as node">
-      <h2>Configuración</h2>
+    <aside class="properties" *ngIf="selectedNode as node; else connectionProperties">
+      <h2>Configuración de nodo</h2>
       <label>
         Etiqueta
         <input [(ngModel)]="node.data.label" (ngModelChange)="updateNode()" />
+      </label>
+
+      <label>
+        Descripción
+        <textarea [(ngModel)]="node.data.description" (ngModelChange)="updateNode()" rows="3" placeholder="Describe para qué sirve este nodo"></textarea>
       </label>
 
       <label *ngIf="node.type === 'decision'">
@@ -159,6 +171,34 @@
 
       <button class="danger" (click)="deleteSelectedNode()" style="width: 100%; margin-top: auto;">Eliminar nodo</button>
     </aside>
+
+    <ng-template #connectionProperties>
+      <aside class="properties" *ngIf="selectedConnection as connection">
+        <h2>Configuración de conexión</h2>
+        <p><strong>Origen:</strong> {{ nodeLabel(connection.fromNodeId) }}</p>
+        <p><strong>Destino:</strong> {{ nodeLabel(connection.toNodeId) }}</p>
+
+        <label>
+          Puerto de salida
+          <select [(ngModel)]="connection.fromPort" (ngModelChange)="updateConnection()">
+            <option value="default">default</option>
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+        </label>
+
+        <label>
+          Nodo destino
+          <select [(ngModel)]="connection.toNodeId" (ngModelChange)="updateConnection()">
+            <option *ngFor="let nodeOption of nodes" [value]="nodeOption.id" [disabled]="nodeOption.id === connection.fromNodeId">
+              {{ nodeOption.data.label }}
+            </option>
+          </select>
+        </label>
+
+        <button class="danger" (click)="removeConnection(connection.id)" style="width: 100%; margin-top: auto;">Eliminar conexión</button>
+      </aside>
+    </ng-template>
   </main>
 
   <section class="bottom-panels">

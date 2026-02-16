@@ -2,6 +2,7 @@ export type NodeType = 'start' | 'task' | 'decision' | 'script' | 'api' | 'end';
 
 export interface FlowNodeData {
   label: string;
+  description?: string;
   condition?: string;
   script?: string;
   apiUrl?: string;

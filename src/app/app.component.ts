@@ -27,6 +27,7 @@ export class AppComponent {
   nodes: FlowNode[] = [];
   connections: FlowConnection[] = [];
   selectedNodeId?: string;
+  selectedConnectionId?: string;
   connectingFrom?: { nodeId: string; fromPort: FlowConnection['fromPort'] };
   logs: string[] = [];
   validationErrors: string[] = [];
@@ -136,6 +137,7 @@ export class AppComponent {
 
   selectNode(nodeId: string): void {
     this.selectedNodeId = nodeId;
+    this.selectedConnectionId = undefined;
   }
 
   deleteSelectedNode(): void {
@@ -148,6 +150,7 @@ export class AppComponent {
       (connection) => connection.fromNodeId !== this.selectedNodeId && connection.toNodeId !== this.selectedNodeId
     );
     this.selectedNodeId = undefined;
+    this.selectedConnectionId = undefined;
   }
 
   startConnect(nodeId: string, fromPort: FlowConnection['fromPort']): void {
@@ -185,6 +188,9 @@ export class AppComponent {
   removeConnection(connectionId: string): void {
     this.pushHistory();
     this.connections = this.connections.filter((connection) => connection.id !== connectionId);
+    if (this.selectedConnectionId === connectionId) {
+      this.selectedConnectionId = undefined;
+    }
   }
 
   cancelConnect(): void {
@@ -193,6 +199,20 @@ export class AppComponent {
 
   get selectedNode(): FlowNode | undefined {
     return this.nodes.find((node) => node.id === this.selectedNodeId);
+  }
+
+
+  selectConnection(connectionId: string): void {
+    this.selectedConnectionId = connectionId;
+    this.selectedNodeId = undefined;
+  }
+
+  get selectedConnection(): FlowConnection | undefined {
+    return this.connections.find((connection) => connection.id === this.selectedConnectionId);
+  }
+
+  nodeLabel(nodeId: string): string {
+    return this.nodes.find((node) => node.id === nodeId)?.data.label ?? nodeId;
   }
 
   get connectingHint(): string {
@@ -210,6 +230,11 @@ export class AppComponent {
   updateNode(): void {
     this.pushHistory();
     this.nodes = [...this.nodes];
+  }
+
+  updateConnection(): void {
+    this.pushHistory();
+    this.connections = [...this.connections];
   }
 
   saveCurrentScript(): void {
@@ -296,6 +321,7 @@ export class AppComponent {
     this.nodes = [];
     this.connections = [];
     this.selectedNodeId = undefined;
+    this.selectedConnectionId = undefined;
     this.validationErrors = [];
     this.connectingFrom = undefined;
   }
@@ -316,6 +342,7 @@ export class AppComponent {
     this.nodes = structuredClone(flow.nodes);
     this.connections = structuredClone(flow.connections);
     this.selectedNodeId = undefined;
+    this.selectedConnectionId = undefined;
     this.validationErrors = [];
   }
 
@@ -326,6 +353,8 @@ export class AppComponent {
     this.flowId = this.id('flow');
     this.nodes = structuredClone(demo.flow.nodes);
     this.connections = structuredClone(demo.flow.connections);
+    this.selectedNodeId = undefined;
+    this.selectedConnectionId = undefined;
   }
 
   toggleDarkMode(): void {
@@ -358,6 +387,8 @@ export class AppComponent {
       this.flowId = flow.id;
       this.nodes = flow.nodes;
       this.connections = flow.connections;
+      this.selectedNodeId = undefined;
+      this.selectedConnectionId = undefined;
       this.logs.unshift(`Flujo importado: ${flow.name}`);
     });
   }
@@ -407,6 +438,7 @@ export class AppComponent {
     this.connections = snapshot.connections;
     this.flowName = snapshot.flowName;
     this.selectedNodeId = undefined;
+    this.selectedConnectionId = undefined;
   }
 
   redo(): void {
@@ -419,6 +451,8 @@ export class AppComponent {
     this.nodes = snapshot.nodes;
     this.connections = snapshot.connections;
     this.flowName = snapshot.flowName;
+    this.selectedNodeId = undefined;
+    this.selectedConnectionId = undefined;
   }
 
   onNodeDrag(event: MouseEvent, node: FlowNode): void {
@@ -515,6 +549,7 @@ export class AppComponent {
       y,
       data: {
         label,
+        description: '',
         condition: type === 'decision' ? 'true' : undefined,
         script: type === 'script' ? 'return context;' : undefined,
         apiMethod: 'GET',

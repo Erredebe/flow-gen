@@ -91,10 +91,6 @@
         </div>
       </details>
 
-      <h3>Conexión</h3>
-      <p>{{ connectingHint }}</p>
-      <button *ngIf="connectingFrom" (click)="cancelConnect()">Cancelar conexión</button>
-
       <details class="sidebar-section connection-list" *ngIf="connections.length" open>
         <summary>Conexiones</summary>
         <div

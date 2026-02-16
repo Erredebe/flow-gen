@@ -37,75 +37,83 @@
 
   <main class="workspace">
     <aside class="sidebar">
-      <h2>Paleta de nodos</h2>
-      <button
-        *ngFor="let template of templates"
-        [style.border-left-color]="template.color"
-        (click)="addNode(template.type)">
-        <span>{{ template.icon }}</span>
-        {{ template.label }}
-      </button>
+      <section class="sidebar-card palette-card">
+        <h2>Paleta de nodos</h2>
+        <button
+          *ngFor="let template of templates"
+          [style.border-left-color]="template.color"
+          (click)="addNode(template.type)">
+          <span>{{ template.icon }}</span>
+          {{ template.label }}
+        </button>
+      </section>
 
-      <details class="sidebar-section" open>
-        <summary>Flujos guardados</summary>
-        <div *ngFor="let flow of savedFlows" class="saved-item">
-          <button (click)="loadFlow(flow.id)">{{ flow.name }}</button>
-          <button class="danger" (click)="deleteFlow(flow.id)">✕</button>
-        </div>
-      </details>
-
-      <details class="sidebar-section context-panel" open>
-        <summary>Contexto de ejecución</summary>
-
-        <div class="context-empty" *ngIf="!contextHistory.length && !contextEntries(executionContext).length">
-          Aún no hay contexto. Ejecuta el flujo para ver variables y valores.
-        </div>
-
-        <div class="context-values" *ngIf="contextEntries(executionContext).length">
-          <h4>Estado actual de context</h4>
-          <div class="context-row" *ngFor="let item of contextEntries(executionContext)">
-            <strong>{{ item.key }}</strong>
-            <code>{{ item.value }}</code>
+      <section class="sidebar-card">
+        <details class="sidebar-section" open>
+          <summary>Flujos guardados</summary>
+          <div *ngFor="let flow of savedFlows" class="saved-item">
+            <button (click)="loadFlow(flow.id)">{{ flow.name }}</button>
+            <button class="danger" (click)="deleteFlow(flow.id)">✕</button>
           </div>
-        </div>
+        </details>
+      </section>
 
-        <div class="context-history" *ngIf="contextChangeLog.length">
-          <h4>Variables declaradas/cambiadas</h4>
-          <div class="context-row" *ngFor="let change of contextChangeLog">
-            <small>{{ change.nodeLabel }}</small>
-            <strong>{{ change.key }}</strong>
-            <code>{{ change.value }}</code>
+      <section class="sidebar-card">
+        <details class="sidebar-section context-panel" open>
+          <summary>Contexto de ejecución</summary>
+
+          <div class="context-empty" *ngIf="!contextHistory.length && !contextEntries(executionContext).length">
+            Aún no hay contexto. Ejecuta el flujo para ver variables y valores.
           </div>
-        </div>
 
-        <div class="context-history" *ngIf="contextHistory.length">
-          <h4>Historial por nodo</h4>
-          <details *ngFor="let snapshot of contextHistory; let idx = index" class="context-step">
-            <summary>#{{ idx + 1 }} {{ snapshot.nodeLabel }}</summary>
-            <div class="context-row" *ngFor="let item of contextEntries(snapshot.context)">
+          <div class="context-values" *ngIf="contextEntries(executionContext).length">
+            <h4>Estado actual de context</h4>
+            <div class="context-row" *ngFor="let item of contextEntries(executionContext)">
               <strong>{{ item.key }}</strong>
               <code>{{ item.value }}</code>
             </div>
-            <p class="context-empty" *ngIf="!contextEntries(snapshot.context).length">Sin variables en este punto.</p>
-          </details>
-        </div>
-      </details>
+          </div>
 
-      <h3>Conexión</h3>
-      <p>{{ connectingHint }}</p>
-      <button *ngIf="connectingFrom" (click)="cancelConnect()">Cancelar conexión</button>
+          <div class="context-history" *ngIf="contextChangeLog.length">
+            <h4>Variables declaradas/cambiadas</h4>
+            <div class="context-row" *ngFor="let change of contextChangeLog">
+              <small>{{ change.nodeLabel }}</small>
+              <strong>{{ change.key }}</strong>
+              <code>{{ change.value }}</code>
+            </div>
+          </div>
 
-      <details class="sidebar-section connection-list" *ngIf="connections.length" open>
-        <summary>Conexiones</summary>
-        <div
-          *ngFor="let connection of connections"
-          class="saved-item"
-          [class.selected-item]="connection.id === selectedConnectionId"
-          (click)="selectConnection(connection.id)">
-          <small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }} ({{ connection.fromPort }})</small>
-          <button class="danger" (click)="removeConnection(connection.id); $event.stopPropagation()">✕</button>
-        </div>
-      </details>
+          <div class="context-history" *ngIf="contextHistory.length">
+            <h4>Historial por nodo</h4>
+            <details *ngFor="let snapshot of contextHistory; let idx = index" class="context-step">
+              <summary>#{{ idx + 1 }} {{ snapshot.nodeLabel }}</summary>
+              <div class="context-row" *ngFor="let item of contextEntries(snapshot.context)">
+                <strong>{{ item.key }}</strong>
+                <code>{{ item.value }}</code>
+              </div>
+              <p class="context-empty" *ngIf="!contextEntries(snapshot.context).length">Sin variables en este punto.</p>
+            </details>
+          </div>
+        </details>
+      </section>
+
+      <section class="sidebar-card">
+        <h3>Conexión</h3>
+        <p>{{ connectingHint }}</p>
+        <button *ngIf="connectingFrom" (click)="cancelConnect()">Cancelar conexión</button>
+
+        <details class="sidebar-section connection-list" *ngIf="connections.length" open>
+          <summary>Conexiones</summary>
+          <div
+            *ngFor="let connection of connections"
+            class="saved-item"
+            [class.selected-item]="connection.id === selectedConnectionId"
+            (click)="selectConnection(connection.id)">
+            <small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }} ({{ connection.fromPort }})</small>
+            <button class="danger" (click)="removeConnection(connection.id); $event.stopPropagation()">✕</button>
+          </div>
+        </details>
+      </section>
     </aside>
 
     <section class="canvas-wrapper" (wheel)="onWheel($event)">

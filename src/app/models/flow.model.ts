@@ -41,6 +41,7 @@ export interface ExecutionLog {
 
 export interface ExecutionResult {
   visitedNodeIds: string[];
+  failedNodeIds: string[];
   logs: ExecutionLog[];
   status: 'completed' | 'failed';
 }

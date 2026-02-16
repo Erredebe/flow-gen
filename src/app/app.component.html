@@ -82,6 +82,7 @@
           class="node"
           [class.selected]="node.id === selectedNodeId"
           [class.active]="activeNodeIds.has(node.id)"
+          [class.failed]="failedNodeIds.has(node.id)"
           [class.connect-target]="connectingFrom && connectingFrom.nodeId !== node.id"
           [style.left.px]="node.x"
           [style.top.px]="node.y"
@@ -212,6 +213,7 @@
 
     <article>
       <h3>Logs de ejecución</h3>
+      <button (click)="resetConsole()">Reset consola</button>
       <ul>
         <li *ngFor="let line of logs">{{ line }}</li>
       </ul>

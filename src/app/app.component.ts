@@ -33,6 +33,7 @@ export class AppComponent {
   validationErrors: string[] = [];
   running = false;
   activeNodeIds = new Set<string>();
+  failedNodeIds = new Set<string>();
   savedFlows: FlowDefinition[] = [];
   scriptLibrary: ScriptSnippet[] = [];
   scriptDraftName = '';
@@ -290,16 +291,22 @@ export class AppComponent {
 
     this.running = true;
     this.activeNodeIds.clear();
+    this.failedNodeIds.clear();
     this.logs = [];
 
     const result = await this.engine.execute(this.currentFlow());
     result.visitedNodeIds.forEach((id) => this.activeNodeIds.add(id));
+    result.failedNodeIds.forEach((id) => this.failedNodeIds.add(id));
     this.logs = result.logs.map((entry) => `[${entry.level.toUpperCase()}] ${entry.message}`);
     this.running = false;
   }
 
   validateFlow(): void {
     this.validationErrors = this.validator.validate(this.currentFlow());
+  }
+
+  resetConsole(): void {
+    this.logs = [];
   }
 
   saveFlow(): void {
@@ -526,11 +533,21 @@ export class AppComponent {
   }
 
   private pushHistory(): void {
+    this.clearExecutionState();
     this.history.push(this.snapshot());
     if (this.history.length > 100) {
       this.history.shift();
     }
     this.future = [];
+  }
+
+
+  private clearExecutionState(): void {
+    this.running = false;
+    this.activeNodeIds.clear();
+    this.failedNodeIds.clear();
+    this.logs = [];
+    this.validationErrors = [];
   }
 
   private snapshot(): { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string } {

@@ -6,6 +6,7 @@ export class FlowEngineService {
   async execute(flow: FlowDefinition): Promise<ExecutionResult> {
     const logs: ExecutionLog[] = [];
     const visitedNodeIds: string[] = [];
+    const failedNodeIds = new Set<string>();
     const context: Record<string, unknown> = {};
 
     const start = flow.nodes.find((node) => node.type === 'start');
@@ -13,6 +14,7 @@ export class FlowEngineService {
       return {
         logs: [{ level: 'error', message: 'No se encontró nodo Inicio.', timestamp: new Date().toISOString() }],
         visitedNodeIds,
+        failedNodeIds: [],
         status: 'failed'
       };
     }
@@ -24,7 +26,7 @@ export class FlowEngineService {
       safetyCounter += 1;
       if (safetyCounter > 200) {
         logs.push(this.log('warning', 'Detención por posible bucle infinito.'));
-        return { logs, visitedNodeIds, status: 'failed' };
+        return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
       }
 
       visitedNodeIds.push(currentNode.id);
@@ -37,7 +39,8 @@ export class FlowEngineService {
           logs.push(this.log('info', `Resultado script: ${JSON.stringify(scriptResult)}`));
         } catch (error) {
           logs.push(this.log('error', `Error de script: ${String(error)}`));
-          return { logs, visitedNodeIds, status: 'failed' };
+          failedNodeIds.add(currentNode.id);
+          return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
         }
       }
 
@@ -52,13 +55,14 @@ export class FlowEngineService {
           context['lastApiStatus'] = response.status;
         } catch (error) {
           logs.push(this.log('error', `Error API: ${String(error)}`));
-          return { logs, visitedNodeIds, status: 'failed' };
+          failedNodeIds.add(currentNode.id);
+          return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
         }
       }
 
       if (currentNode.type === 'end') {
         logs.push(this.log('info', 'Flujo completado.'));
-        return { logs, visitedNodeIds, status: 'completed' };
+        return { logs, visitedNodeIds, failedNodeIds: [], status: 'completed' };
       }
 
       const outgoing = flow.connections.filter((connection) => connection.fromNodeId === currentNode?.id);
@@ -71,7 +75,8 @@ export class FlowEngineService {
           decisionResult = Boolean(conditionFn(context));
         } catch (error) {
           logs.push(this.log('error', `Error en condición: ${String(error)}`));
-          return { logs, visitedNodeIds, status: 'failed' };
+          failedNodeIds.add(currentNode.id);
+          return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
         }
 
         logs.push(this.log('info', `Decisión: ${decisionResult ? 'true' : 'false'}`));
@@ -85,7 +90,7 @@ export class FlowEngineService {
     }
 
     logs.push(this.log('warning', 'Ejecución detenida sin llegar a Fin.'));
-    return { logs, visitedNodeIds, status: 'failed' };
+    return { logs, visitedNodeIds, failedNodeIds: Array.from(failedNodeIds), status: 'failed' };
   }
 
   private log(level: ExecutionLog['level'], message: string): ExecutionLog {

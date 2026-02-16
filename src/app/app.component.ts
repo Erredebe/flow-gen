@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { FlowConnection, FlowDefinition, FlowNode, NodeType, ScriptSnippet } from './models/flow.model';
+import { ExecutionContextSnapshot, FlowConnection, FlowDefinition, FlowNode, NodeType, ScriptSnippet } from './models/flow.model';
 import { FlowEngineService } from './services/flow-engine.service';
 import { FlowStorageService } from './services/flow-storage.service';
 import { FlowValidationService } from './services/flow-validation.service';
@@ -11,6 +11,13 @@ interface NodeTemplate {
   label: string;
   color: string;
   icon: string;
+}
+
+interface ContextChange {
+  nodeId: string;
+  nodeLabel: string;
+  key: string;
+  value: string;
 }
 
 @Component({
@@ -46,6 +53,10 @@ export class AppComponent {
   panX = 0;
   panY = 0;
   showContentManager = false;
+
+  executionContext: Record<string, unknown> = {};
+  contextHistory: ExecutionContextSnapshot[] = [];
+  contextChangeLog: ContextChange[] = [];
 
   private history: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
   private future: { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string }[] = [];
@@ -293,11 +304,17 @@ export class AppComponent {
     this.activeNodeIds.clear();
     this.failedNodeIds.clear();
     this.logs = [];
+    this.executionContext = {};
+    this.contextHistory = [];
+    this.contextChangeLog = [];
 
     const result = await this.engine.execute(this.currentFlow());
     result.visitedNodeIds.forEach((id) => this.activeNodeIds.add(id));
     result.failedNodeIds.forEach((id) => this.failedNodeIds.add(id));
     this.logs = result.logs.map((entry) => `[${entry.level.toUpperCase()}] ${entry.message}`);
+    this.executionContext = result.context;
+    this.contextHistory = result.contextHistory;
+    this.contextChangeLog = this.contextChanges();
     this.running = false;
   }
 
@@ -330,6 +347,9 @@ export class AppComponent {
     this.selectedNodeId = undefined;
     this.selectedConnectionId = undefined;
     this.validationErrors = [];
+    this.executionContext = {};
+    this.contextHistory = [];
+    this.contextChangeLog = [];
     this.connectingFrom = undefined;
   }
 
@@ -351,6 +371,9 @@ export class AppComponent {
     this.selectedNodeId = undefined;
     this.selectedConnectionId = undefined;
     this.validationErrors = [];
+    this.executionContext = {};
+    this.contextHistory = [];
+    this.contextChangeLog = [];
   }
 
   loadDemo(index: number): void {
@@ -514,6 +537,51 @@ export class AppComponent {
     this.tutorialStep += 1;
   }
 
+  contextEntries(context?: Record<string, unknown>): { key: string; value: string }[] {
+    if (!context) {
+      return [];
+    }
+
+    return Object.entries(context).map(([key, value]) => ({
+      key,
+      value: this.serializeContextValue(value)
+    }));
+  }
+
+  contextChanges(): ContextChange[] {
+    const changes: ContextChange[] = [];
+    let previousContext: Record<string, unknown> = {};
+
+    for (const snapshot of this.contextHistory) {
+      const previousEntries = new Map(Object.entries(previousContext).map(([key, value]) => [key, this.serializeContextValue(value)]));
+
+      for (const [key, value] of Object.entries(snapshot.context)) {
+        const serializedValue = this.serializeContextValue(value);
+        if (previousEntries.get(key) !== serializedValue) {
+          changes.push({
+            nodeId: snapshot.nodeId,
+            nodeLabel: snapshot.nodeLabel,
+            key,
+            value: serializedValue
+          });
+        }
+      }
+
+      previousContext = snapshot.context;
+    }
+
+    return changes;
+  }
+
+  private serializeContextValue(value: unknown): string {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    const serialized = JSON.stringify(value, null, 2);
+    return serialized ?? String(value);
+  }
+
   private currentFlow(): FlowDefinition {
     return {
       id: this.flowId,
@@ -548,6 +616,9 @@ export class AppComponent {
     this.failedNodeIds.clear();
     this.logs = [];
     this.validationErrors = [];
+    this.executionContext = {};
+    this.contextHistory = [];
+    this.contextChangeLog = [];
   }
 
   private snapshot(): { nodes: FlowNode[]; connections: FlowConnection[]; flowName: string } {

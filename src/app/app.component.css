@@ -509,6 +509,75 @@ h2, h3, h4 {
   background: var(--slate-800);
 }
 
+.context-panel {
+  max-height: 360px;
+  overflow: auto;
+}
+
+.context-empty {
+  margin: var(--space-2) 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.context-values,
+.context-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.context-values h4,
+.context-history h4 {
+  margin: var(--space-2) 0 0;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.context-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+}
+
+.context-row strong {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.context-row small {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.context-row code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.context-step {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--bg-sidebar) 80%, transparent);
+  padding: var(--space-2);
+}
+
+.context-step summary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
 /* Modal Styling */
 .modal-overlay {
   position: fixed;

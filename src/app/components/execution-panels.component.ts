@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CollapsiblePanelComponent } from './collapsible-panel.component';
 
 @Component({
   selector: 'app-execution-panels',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CollapsiblePanelComponent],
   templateUrl: './execution-panels.component.html'
 })
 export class ExecutionPanelsComponent {

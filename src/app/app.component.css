@@ -283,8 +283,19 @@ h2, h3, h4 {
 }
 
 .sidebar-card summary h2,
-.sidebar-card summary h3 {
+.sidebar-card summary h3,
+.panel-title {
   margin: 0;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.panel-content {
+  margin-top: var(--space-3);
+}
+
+app-collapsible-panel {
+  display: block;
 }
 
 .palette-content {
@@ -485,19 +496,14 @@ h2, h3, h4 {
   padding: var(--space-4);
 }
 
-.bottom-panels article {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
+.bottom-panel-card {
   min-height: 200px;
-  box-shadow: var(--shadow);
 }
 
-
-.bottom-panels article > button {
+.bottom-panel-card > .panel-content > button {
   margin-bottom: var(--space-2);
 }
+
 .bottom-panels ul {
   list-style: none;
   font-family: var(--font-mono);
@@ -579,9 +585,10 @@ h2, h3, h4 {
   background: var(--slate-800);
 }
 
-.context-panel {
-  max-height: 360px;
-  overflow: auto;
+.context-panel .panel-content {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: var(--space-1);
 }
 
 .context-empty {
@@ -648,15 +655,6 @@ h2, h3, h4 {
   font-weight: 600;
 }
 
-.quick-help-list {
-  margin-top: var(--space-2);
-  padding-left: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  color: var(--text-muted);
-  font-size: 0.875rem;
-}
 
 .properties-guide p {
   color: var(--text-muted);

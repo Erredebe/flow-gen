@@ -3,11 +3,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ContextChange, NodeTemplate } from '../models/app-ui.model';
 import { ExecutionContextSnapshot, FlowConnection, FlowDefinition, FlowNode, NodeType, ScriptSnippet } from '../models/flow.model';
+import { CollapsiblePanelComponent } from './collapsible-panel.component';
 
 @Component({
   selector: 'app-flow-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CollapsiblePanelComponent],
   templateUrl: './flow-workspace.component.html'
 })
 export class FlowWorkspaceComponent {

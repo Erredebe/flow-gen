@@ -1,7 +1,6 @@
 <main class="workspace">
   <aside class="left-panels">
-    <details class="sidebar-card" open>
-      <summary><h2>Paleta de nodos</h2></summary>
+    <app-collapsible-panel title="Paleta de nodos" [open]="true">
       <div class="palette-content">
         <button
           *ngFor="let template of templates"
@@ -12,29 +11,16 @@
           {{ template.label }}
         </button>
       </div>
-    </details>
+    </app-collapsible-panel>
 
-    <details class="sidebar-card" open>
-      <summary><h3>Flujos guardados</h3></summary>
+    <app-collapsible-panel title="Flujos guardados" [open]="true">
       <div *ngFor="let flow of savedFlows" class="saved-item">
         <button (click)="loadFlow.emit(flow.id)">{{ flow.name }}</button>
         <button class="danger" (click)="deleteFlow.emit(flow.id)" aria-label="Eliminar flujo">✕</button>
       </div>
-    </details>
+    </app-collapsible-panel>
 
-    <details class="sidebar-card" open>
-      <summary><h3>Cómo usar el lienzo</h3></summary>
-      <ul class="quick-help-list">
-        <li>Agrega nodos desde la paleta y haz clic sobre un nodo para editarlo.</li>
-        <li>Usa el botón <strong>Salida</strong> para comenzar una conexión.</li>
-        <li>Haz clic en otro nodo para completar la conexión.</li>
-        <li>Selecciona una conexión para editar puerto o destino.</li>
-      </ul>
-    </details>
-
-    <details class="sidebar-card context-panel" open>
-      <summary><h3>Contexto de ejecución</h3></summary>
-
+    <app-collapsible-panel title="Contexto de ejecución" [open]="true" panelClass="context-panel">
       <div class="context-empty" *ngIf="!contextHistory.length && !contextEntries(executionContext).length">
         Aún no hay contexto. Ejecuta el flujo para ver variables y valores.
       </div>
@@ -67,10 +53,9 @@
           <p class="context-empty" *ngIf="!contextEntries(snapshot.context).length">Sin variables en este punto.</p>
         </details>
       </div>
-    </details>
+    </app-collapsible-panel>
 
-    <details class="sidebar-card connection-list" *ngIf="connections.length" open>
-      <summary><h3>Conexiones</h3></summary>
+    <app-collapsible-panel title="Conexiones" [open]="true" panelClass="connection-list" *ngIf="connections.length">
       <div
         *ngFor="let connection of connections"
         class="saved-item"
@@ -79,7 +64,7 @@
         <small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }} ({{ connection.fromPort }})</small>
         <button class="danger" (click)="removeConnection.emit(connection.id); $event.stopPropagation()" aria-label="Eliminar conexión">✕</button>
       </div>
-    </details>
+    </app-collapsible-panel>
   </aside>
 
   <section class="canvas-wrapper" (wheel)="onWheel.emit($event)">

@@ -60,3 +60,12 @@ export interface ScriptSnippet {
   content: string;
   updatedAt: string;
 }
+
+export interface MarkdownDocument {
+  id: string;
+  flowId: string;
+  flowName: string;
+  title: string;
+  content: string;
+  updatedAt: string;
+}

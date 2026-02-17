@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
-import { ExecutionContextSnapshot, FlowConnection, FlowDefinition, FlowNode, NodeType, ScriptSnippet } from './models/flow.model';
+import { ExecutionContextSnapshot, FlowConnection, FlowDefinition, FlowNode, MarkdownDocument, NodeType, ScriptSnippet } from './models/flow.model';
 import { FlowEngineService } from './services/flow-engine.service';
 import { FlowStorageService } from './services/flow-storage.service';
 import { FlowValidationService } from './services/flow-validation.service';
@@ -43,6 +44,12 @@ export class AppComponent {
   failedNodeIds = new Set<string>();
   savedFlows: FlowDefinition[] = [];
   scriptLibrary: ScriptSnippet[] = [];
+  markdownLibrary: MarkdownDocument[] = [];
+  selectedMarkdownId = '';
+  markdownDraftTitle = '';
+  markdownDraftContent = '';
+  markdownPreviewHtml: SafeHtml = '';
+  showMarkdownStudio = false;
   scriptDraftName = '';
   selectedScriptId = '';
   tutorialStep = 0;
@@ -117,10 +124,12 @@ export class AppComponent {
   constructor(
     private readonly storage: FlowStorageService,
     private readonly validator: FlowValidationService,
-    private readonly engine: FlowEngineService
+    private readonly engine: FlowEngineService,
+    private readonly sanitizer: DomSanitizer
   ) {
     this.refreshSavedFlows();
     this.refreshScriptLibrary();
+    this.refreshMarkdownLibrary();
   }
 
   addNode(type: NodeType): void {
@@ -391,6 +400,110 @@ export class AppComponent {
     URL.revokeObjectURL(url);
   }
 
+  exportFlowAsMarkdown(): void {
+    const markdown = this.generateFlowMarkdown(this.currentFlow());
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${this.flowName.replace(/\s+/g, '-').toLowerCase()}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+    this.logs.unshift(`Markdown exportado: ${this.flowName}.md`);
+  }
+
+  toggleMarkdownStudio(): void {
+    this.showMarkdownStudio = !this.showMarkdownStudio;
+    if (this.showMarkdownStudio) {
+      this.renderMarkdownPreview();
+    }
+  }
+
+  openMarkdownStudio(markdownId?: string): void {
+    this.showMarkdownStudio = true;
+    if (markdownId) {
+      this.loadMarkdownForEditing(markdownId);
+    } else {
+      this.renderMarkdownPreview();
+    }
+  }
+
+  generateMarkdownFromFlow(): void {
+    const flow = this.currentFlow();
+    this.markdownDraftTitle = `${flow.name} · Documentación`;
+    this.markdownDraftContent = this.generateFlowMarkdown(flow);
+    this.selectedMarkdownId = '';
+    this.renderMarkdownPreview();
+    this.logs.unshift('Borrador Markdown generado a partir del flujo actual.');
+  }
+
+  saveMarkdownDraft(): void {
+    const title = this.markdownDraftTitle.trim();
+    const content = this.markdownDraftContent.trim();
+    if (!title || !content) {
+      this.logs.unshift('Completa título y contenido antes de guardar el markdown.');
+      return;
+    }
+
+    const markdown: MarkdownDocument = {
+      id: this.selectedMarkdownId || this.id('md'),
+      flowId: this.flowId,
+      flowName: this.flowName,
+      title,
+      content,
+      updatedAt: new Date().toISOString()
+    };
+
+    this.storage.saveMarkdown(markdown);
+    this.selectedMarkdownId = markdown.id;
+    this.refreshMarkdownLibrary();
+    this.logs.unshift(`Markdown guardado en localStorage: ${title}`);
+  }
+
+  loadMarkdownForEditing(markdownId: string): void {
+    const markdown = this.markdownLibrary.find((item) => item.id === markdownId);
+    if (!markdown) {
+      return;
+    }
+
+    this.selectedMarkdownId = markdown.id;
+    this.markdownDraftTitle = markdown.title;
+    this.markdownDraftContent = markdown.content;
+    this.renderMarkdownPreview();
+  }
+
+  deleteMarkdown(markdownId: string): void {
+    this.storage.deleteMarkdown(markdownId);
+    if (this.selectedMarkdownId === markdownId) {
+      this.selectedMarkdownId = '';
+      this.markdownDraftTitle = '';
+      this.markdownDraftContent = '';
+      this.markdownPreviewHtml = '';
+    }
+    this.refreshMarkdownLibrary();
+  }
+
+  exportSelectedMarkdown(): void {
+    const title = this.markdownDraftTitle.trim() || this.flowName;
+    const content = this.markdownDraftContent.trim();
+    if (!content) {
+      this.logs.unshift('No hay contenido Markdown para exportar.');
+      return;
+    }
+
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.replace(/\s+/g, '-').toLowerCase()}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  renderMarkdownPreview(): void {
+    this.markdownPreviewHtml = this.sanitizer.bypassSecurityTrustHtml(this.markdownToHtml(this.markdownDraftContent));
+  }
+
   importFlow(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -559,6 +672,111 @@ export class AppComponent {
     }
 
     return changes;
+  }
+
+  private refreshMarkdownLibrary(): void {
+    this.markdownLibrary = this.storage.listMarkdowns().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }
+
+  private generateFlowMarkdown(flow: FlowDefinition): string {
+    const date = new Date(flow.updatedAt).toLocaleString('es-ES');
+    const nodeTypeSummary = this.templates
+      .map((template) => {
+        const count = flow.nodes.filter((node) => node.type === template.type).length;
+        return count > 0 ? `- **${template.label}**: ${count}` : '';
+      })
+      .filter(Boolean)
+      .join('\n');
+
+    const nodeSections = flow.nodes
+      .map((node, index) => {
+        const outgoing = flow.connections.filter((connection) => connection.fromNodeId === node.id);
+        const incoming = flow.connections.filter((connection) => connection.toNodeId === node.id);
+        const outgoingLines = outgoing.length
+          ? outgoing
+              .map((connection) => {
+                const target = flow.nodes.find((item) => item.id === connection.toNodeId);
+                const route = connection.fromPort === 'default' ? 'flujo principal' : `rama ${connection.fromPort}`;
+                return `  - ${route} → **${target?.data.label ?? connection.toNodeId}**`;
+              })
+              .join('\n')
+          : '  - Sin salidas';
+
+        const technicalDetails = [
+          node.type === 'decision' && node.data.condition ? `- Condición: \`${node.data.condition}\`` : '',
+          node.type === 'script' && node.data.script ? `- Script:
+\n\`\`\`ts\n${node.data.script}\n\`\`\`` : '',
+          node.type === 'api' && node.data.apiUrl ? `- API: \`${node.data.apiMethod ?? 'GET'} ${node.data.apiUrl}\`` : ''
+        ]
+          .filter(Boolean)
+          .join('\n');
+
+        return `### ${index + 1}. ${node.data.label} (${node.type})\n\n${node.data.description ? `${node.data.description}\n\n` : ''}- Nodo ID: \`${node.id}\`\n- Entradas: ${incoming.length}\n- Salidas: ${outgoing.length}\n${technicalDetails ? `${technicalDetails}\n` : ''}\n**Transiciones**\n${outgoingLines}`;
+      })
+      .join('\n\n');
+
+    const connectionMap = flow.connections
+      .map((connection, index) => {
+        const from = flow.nodes.find((node) => node.id === connection.fromNodeId);
+        const to = flow.nodes.find((node) => node.id === connection.toNodeId);
+        return `${index + 1}. **${from?.data.label ?? connection.fromNodeId}** (${connection.fromPort}) → **${to?.data.label ?? connection.toNodeId}**`;
+      })
+      .join('\n');
+
+    return `# ${flow.name}\n\n> Documento generado automáticamente desde iv-flow para facilitar revisión funcional, técnica y de negocio.\n\n## Resumen ejecutivo\n\n- **Última actualización:** ${date}\n- **Nodos totales:** ${flow.nodes.length}\n- **Conexiones totales:** ${flow.connections.length}\n\n## Distribución por tipo de nodo\n\n${nodeTypeSummary || '- Sin nodos definidos.'}\n\n## Diseño detallado del flujo\n\n${nodeSections || 'Sin nodos para documentar.'}\n\n## Matriz de conexiones\n\n${connectionMap || 'No hay conexiones registradas.'}\n\n## Recomendaciones de calidad\n\n- Añade descripciones claras por nodo para mejorar mantenibilidad.\n- Incluye validaciones de errores en scripts y nodos API.\n- Versiona este markdown junto con cambios de negocio para trazabilidad.\n`;
+  }
+
+  private markdownToHtml(markdown: string): string {
+    const escaped = this.escapeHtml(markdown);
+    const blocks = escaped.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
+
+    return blocks
+      .map((block) => {
+        if (block.startsWith('```') && block.endsWith('```')) {
+          const code = block.replace(/^```[a-zA-Z]*\n?/, '').replace(/```$/, '');
+          return `<pre><code>${code}</code></pre>`;
+        }
+
+        if (block.startsWith('# ')) return `<h1>${this.inlineMarkdown(block.slice(2))}</h1>`;
+        if (block.startsWith('## ')) return `<h2>${this.inlineMarkdown(block.slice(3))}</h2>`;
+        if (block.startsWith('### ')) return `<h3>${this.inlineMarkdown(block.slice(4))}</h3>`;
+        if (block.startsWith('> ')) return `<blockquote>${this.inlineMarkdown(block.slice(2))}</blockquote>`;
+
+        if (block.split('\n').every((line) => line.trim().startsWith('- '))) {
+          const items = block
+            .split('\n')
+            .map((line) => `<li>${this.inlineMarkdown(line.replace(/^-\s+/, ''))}</li>`)
+            .join('');
+          return `<ul>${items}</ul>`;
+        }
+
+        if (block.split('\n').every((line) => /^\d+\.\s+/.test(line.trim()))) {
+          const items = block
+            .split('\n')
+            .map((line) => `<li>${this.inlineMarkdown(line.replace(/^\d+\.\s+/, ''))}</li>`)
+            .join('');
+          return `<ol>${items}</ol>`;
+        }
+
+        return `<p>${this.inlineMarkdown(block).replace(/\n/g, '<br/>')}</p>`;
+      })
+      .join('');
+  }
+
+  private inlineMarkdown(text: string): string {
+    return text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/_(.+?)_/g, '<em>$1</em>');
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   private serializeContextValue(value: unknown): string {

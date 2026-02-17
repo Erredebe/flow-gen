@@ -13,8 +13,10 @@
       <button class="primary" (click)="runFlow()" [disabled]="running">Run</button>
       <button (click)="saveFlow()">Guardar</button>
       <button (click)="toggleContentManager()">Gestor de Contenido</button>
+      <button (click)="toggleMarkdownStudio()">Markdown Studio</button>
       <button (click)="toggleDarkMode()">{{ darkMode ? '☀️' : '🌙' }}</button>
-      <button (click)="exportFlow()">Exportar</button>
+      <button (click)="exportFlow()">Exportar JSON</button>
+      <button (click)="exportFlowAsMarkdown()">Exportar MD</button>
       <label class="file-input">
         Importar
         <input type="file" accept="application/json" (change)="importFlow($event)" />
@@ -239,6 +241,46 @@
     </ng-template>
   </main>
 
+  <section class="markdown-studio" *ngIf="showMarkdownStudio">
+    <article class="markdown-editor">
+      <div class="markdown-toolbar">
+        <h3>Editor Markdown</h3>
+        <div class="toolbar-actions">
+          <button (click)="generateMarkdownFromFlow()">Generar desde flujo</button>
+          <button (click)="saveMarkdownDraft()">Guardar en localStorage</button>
+          <button (click)="exportSelectedMarkdown()">Exportar .md</button>
+          <button class="danger" (click)="toggleMarkdownStudio()">Cerrar</button>
+        </div>
+      </div>
+
+      <label>
+        Título
+        <input [(ngModel)]="markdownDraftTitle" placeholder="Título del documento" />
+      </label>
+      <label>
+        Contenido Markdown
+        <textarea
+          rows="18"
+          [(ngModel)]="markdownDraftContent"
+          (ngModelChange)="renderMarkdownPreview()"
+          placeholder="# Documento del flujo"></textarea>
+      </label>
+    </article>
+
+    <article class="markdown-preview">
+      <h3>Visor Markdown</h3>
+      <div class="preview-content" [innerHTML]="markdownPreviewHtml"></div>
+
+      <h4>Markdowns guardados</h4>
+      <div class="saved-item" *ngFor="let markdown of markdownLibrary">
+        <button (click)="loadMarkdownForEditing(markdown.id)">{{ markdown.title }}</button>
+        <small>{{ markdown.updatedAt | date:'short' }}</small>
+        <button class="danger" (click)="deleteMarkdown(markdown.id)">✕</button>
+      </div>
+      <p class="context-empty" *ngIf="!markdownLibrary.length">No hay markdowns guardados en localStorage.</p>
+    </article>
+  </section>
+
   <section class="bottom-panels">
     <article>
       <h3>Validación</h3>
@@ -280,6 +322,23 @@
               </div>
             </div>
             <div *ngIf="savedFlows.length === 0" class="empty-state">No hay flujos guardados.</div>
+          </div>
+        </div>
+
+        <div class="content-section">
+          <h3>Documentación Markdown</h3>
+          <div class="content-grid">
+            <div *ngFor="let markdown of markdownLibrary" class="content-card">
+              <div class="card-info">
+                <strong>{{ markdown.title }}</strong>
+                <small>{{ markdown.flowName }} · {{ markdown.updatedAt | date:'short' }}</small>
+              </div>
+              <div class="card-actions">
+                <button (click)="openMarkdownStudio(markdown.id); toggleContentManager()">Editar</button>
+                <button class="danger" (click)="deleteMarkdown(markdown.id)">Borrar</button>
+              </div>
+            </div>
+            <div *ngIf="markdownLibrary.length === 0" class="empty-state">No hay markdowns guardados.</div>
           </div>
         </div>
 

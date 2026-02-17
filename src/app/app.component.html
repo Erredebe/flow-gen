@@ -109,7 +109,9 @@
             class="saved-item"
             [class.selected-item]="connection.id === selectedConnectionId"
             (click)="selectConnection(connection.id)">
-            <small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }} ({{ connection.fromPort }})</small>
+            <small>
+              {{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }} ({{ connection.fromPort }})
+            </small>
             <button class="danger" (click)="removeConnection(connection.id); $event.stopPropagation()">✕</button>
           </div>
         </details>

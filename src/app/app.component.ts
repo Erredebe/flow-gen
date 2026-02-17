@@ -205,10 +205,6 @@ export class AppComponent {
     }
   }
 
-  cancelConnect(): void {
-    this.connectingFrom = undefined;
-  }
-
   get selectedNode(): FlowNode | undefined {
     return this.nodes.find((node) => node.id === this.selectedNodeId);
   }
@@ -225,14 +221,6 @@ export class AppComponent {
 
   nodeLabel(nodeId: string): string {
     return this.nodes.find((node) => node.id === nodeId)?.data.label ?? nodeId;
-  }
-
-  get connectingHint(): string {
-    if (!this.connectingFrom) {
-      return 'Selecciona una salida y luego haz click en el nodo destino.';
-    }
-
-    return `Conectando desde ${this.connectingFrom.nodeId} (${this.connectingFrom.fromPort}). Haz click sobre un nodo destino.`;
   }
 
   getNodeColor(type: NodeType): string {

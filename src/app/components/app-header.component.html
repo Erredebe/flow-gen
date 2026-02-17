@@ -43,7 +43,7 @@
       <div class="menu-content">
         <button type="button" (click)="toggleContentManager.emit()">Gestor de contenido</button>
         <button type="button" (click)="toggleMarkdownStudio.emit()">Markdown Studio</button>
-        <button type="button" (click)="toggleBottomPanelsOrder.emit()">Intercambiar paneles inferiores</button>
+        <button type="button" (click)="togglePanelSwapMode.emit()">{{ panelSwapMode ? 'Desactivar intercambio de paneles' : 'Activar intercambio de paneles' }}</button>
       </div>
     </details>
 

@@ -8,7 +8,6 @@ import { FlowValidationService } from './services/flow-validation.service';
 import { AppHeaderComponent } from './components/app-header.component';
 import { FlowWorkspaceComponent } from './components/flow-workspace.component';
 import { MarkdownStudioModalComponent } from './components/markdown-studio-modal.component';
-import { ExecutionPanelsComponent } from './components/execution-panels.component';
 import { ContentManagerModalComponent } from './components/content-manager-modal.component';
 
 @Component({
@@ -18,7 +17,6 @@ import { ContentManagerModalComponent } from './components/content-manager-modal
     AppHeaderComponent,
     FlowWorkspaceComponent,
     MarkdownStudioModalComponent,
-    ExecutionPanelsComponent,
     ContentManagerModalComponent
   ],
   templateUrl: './app.component.html',
@@ -57,7 +55,16 @@ export class AppComponent {
   panX = 0;
   panY = 0;
   showContentManager = false;
-  logsPanelFirst = false;
+  panelSwapMode = false;
+  panelZones: Record<string, "left" | "right" | "bottom"> = {
+    palette: "left",
+    savedFlows: "left",
+    context: "left",
+    connections: "left",
+    properties: "right",
+    validation: "bottom",
+    logs: "bottom"
+  };
 
   executionContext: Record<string, unknown> = {};
   contextHistory: ExecutionContextSnapshot[] = [];
@@ -321,8 +328,12 @@ export class AppComponent {
     this.logs = [];
   }
 
-  toggleBottomPanelsOrder(): void {
-    this.logsPanelFirst = !this.logsPanelFirst;
+  togglePanelSwapMode(): void {
+    this.panelSwapMode = !this.panelSwapMode;
+  }
+
+  movePanel(panelId: string, zone: "left" | "right" | "bottom"): void {
+    this.panelZones = { ...this.panelZones, [panelId]: zone };
   }
 
   saveFlow(): void {

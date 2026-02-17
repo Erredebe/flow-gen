@@ -6,6 +6,7 @@
     [showTutorial]="showTutorial"
     [tutorialText]="tutorialText()"
     [demos]="demos"
+    [panelSwapMode]="panelSwapMode"
     (flowNameChange)="flowName = $event"
     (newFlow)="newFlow()"
     (undo)="undo()"
@@ -19,7 +20,7 @@
     (exportFlow)="exportFlow()"
     (exportFlowAsMarkdown)="exportFlowAsMarkdown()"
     (importFlow)="importFlow($event)"
-    (toggleBottomPanelsOrder)="toggleBottomPanelsOrder()"
+    (togglePanelSwapMode)="togglePanelSwapMode()"
     (nextTutorialStep)="nextTutorialStep()"
     (loadDemo)="loadDemo($event)"
     (closeTutorial)="closeTutorial()" />
@@ -45,6 +46,10 @@
     [scriptDraftName]="scriptDraftName"
     [selectedScriptId]="selectedScriptId"
     [scriptLibrary]="scriptLibrary"
+    [validationErrors]="validationErrors"
+    [logs]="logs"
+    [panelSwapMode]="panelSwapMode"
+    [panelZones]="panelZones"
     [nodeLabel]="nodeLabel.bind(this)"
     [contextEntries]="contextEntries.bind(this)"
     [getNodeColor]="getNodeColor.bind(this)"
@@ -68,7 +73,9 @@
     (applySavedScript)="applySavedScript($event)"
     (deleteSavedScript)="deleteSavedScript($event)"
     (deleteSelectedNode)="deleteSelectedNode()"
-    (updateConnection)="updateConnection()" />
+    (updateConnection)="updateConnection()"
+    (resetConsole)="resetConsole()"
+    (movePanel)="movePanel($event.panelId, $event.zone)" />
 
   <app-markdown-studio-modal
     [showMarkdownStudio]="showMarkdownStudio"
@@ -84,12 +91,6 @@
     (exportSelectedMarkdown)="exportSelectedMarkdown()"
     (loadMarkdownForEditing)="loadMarkdownForEditing($event)"
     (deleteMarkdown)="deleteMarkdown($event)" />
-
-  <app-execution-panels
-    [validationErrors]="validationErrors"
-    [logs]="logs"
-    [logsFirst]="logsPanelFirst"
-    (resetConsole)="resetConsole()" />
 
   <app-content-manager-modal
     [showContentManager]="showContentManager"

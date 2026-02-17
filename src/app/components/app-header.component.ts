@@ -30,7 +30,9 @@ export class AppHeaderComponent {
   @Output() exportFlow = new EventEmitter<void>();
   @Output() exportFlowAsMarkdown = new EventEmitter<void>();
   @Output() importFlow = new EventEmitter<Event>();
-  @Output() toggleBottomPanelsOrder = new EventEmitter<void>();
+  @Input({ required: true }) panelSwapMode = false;
+
+  @Output() togglePanelSwapMode = new EventEmitter<void>();
   @Output() nextTutorialStep = new EventEmitter<void>();
   @Output() loadDemo = new EventEmitter<number>();
   @Output() closeTutorial = new EventEmitter<void>();

@@ -6,6 +6,7 @@
         <button
           *ngFor="let template of templates"
           [style.border-left-color]="template.color"
+          [title]="'Agregar nodo ' + template.label"
           (click)="addNode.emit(template.type)">
           <span>{{ template.icon }}</span>
           {{ template.label }}
@@ -17,8 +18,18 @@
       <summary><h3>Flujos guardados</h3></summary>
       <div *ngFor="let flow of savedFlows" class="saved-item">
         <button (click)="loadFlow.emit(flow.id)">{{ flow.name }}</button>
-        <button class="danger" (click)="deleteFlow.emit(flow.id)">✕</button>
+        <button class="danger" (click)="deleteFlow.emit(flow.id)" aria-label="Eliminar flujo">✕</button>
       </div>
+    </details>
+
+    <details class="sidebar-card" open>
+      <summary><h3>Cómo usar el lienzo</h3></summary>
+      <ul class="quick-help-list">
+        <li>Agrega nodos desde la paleta y haz clic sobre un nodo para editarlo.</li>
+        <li>Usa el botón <strong>Salida</strong> para comenzar una conexión.</li>
+        <li>Haz clic en otro nodo para completar la conexión.</li>
+        <li>Selecciona una conexión para editar puerto o destino.</li>
+      </ul>
     </details>
 
     <details class="sidebar-card context-panel" open>
@@ -66,12 +77,17 @@
         [class.selected-item]="connection.id === selectedConnectionId"
         (click)="selectConnection.emit(connection.id)">
         <small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }} ({{ connection.fromPort }})</small>
-        <button class="danger" (click)="removeConnection.emit(connection.id); $event.stopPropagation()">✕</button>
+        <button class="danger" (click)="removeConnection.emit(connection.id); $event.stopPropagation()" aria-label="Eliminar conexión">✕</button>
       </div>
     </details>
   </aside>
 
   <section class="canvas-wrapper" (wheel)="onWheel.emit($event)">
+    <div class="canvas-banner" *ngIf="connectingFrom">
+      Conectando desde <strong>{{ nodeLabel(connectingFrom.nodeId) }}</strong> ({{ connectingFrom.fromPort }}).
+      Selecciona el nodo destino.
+    </div>
+
     <div class="canvas-transform" [style.transform]="'scale(' + zoom + ') translate(' + panX + 'px, ' + panY + 'px)'">
       <svg class="connections">
         <path *ngFor="let connection of connections" [attr.d]="connectionPath(connection)" [class.selected-connection]="connection.id === selectedConnectionId" (click)="selectConnection.emit(connection.id)" />
@@ -106,10 +122,10 @@
     </div>
 
     <div class="canvas-controls glass">
-      <button (click)="zoomIn.emit()" title="Zoom In">+</button>
+      <button (click)="zoomIn.emit()" title="Acercar zoom">+</button>
       <span class="zoom-level">{{ (zoom * 100).toFixed(0) }}%</span>
-      <button (click)="zoomOut.emit()" title="Zoom Out">-</button>
-      <button (click)="resetZoom.emit()" title="Reset">⟲</button>
+      <button (click)="zoomOut.emit()" title="Alejar zoom">-</button>
+      <button (click)="resetZoom.emit()" title="Resetear zoom">⟲</button>
     </div>
   </section>
 
@@ -132,7 +148,7 @@
 
     <label *ngIf="node.type === 'script'">
       Script JS/TS
-      <textarea [(ngModel)]="node.data.script" (ngModelChange)="updateNode.emit()" rows="6"></textarea>
+      <textarea [(ngModel)]="node.data.script" (ngModelChange)="updateNode.emit()" rows="6" placeholder="Escribe aquí tu script"></textarea>
     </label>
 
     <div class="script-tools" *ngIf="node.type === 'script'">
@@ -173,7 +189,7 @@
   </aside>
 
   <ng-template #connectionProperties>
-    <aside class="properties" *ngIf="selectedConnection as connection">
+    <aside class="properties" *ngIf="selectedConnection as connection; else selectionGuide">
       <h2>Configuración de conexión</h2>
       <p><strong>Origen:</strong> {{ nodeLabel(connection.fromNodeId) }}</p>
       <p><strong>Destino:</strong> {{ nodeLabel(connection.toNodeId) }}</p>
@@ -197,6 +213,18 @@
       </label>
 
       <button class="danger" (click)="removeConnection.emit(connection.id)" style="width: 100%; margin-top: auto;">Eliminar conexión</button>
+    </aside>
+  </ng-template>
+
+  <ng-template #selectionGuide>
+    <aside class="properties properties-guide">
+      <h2>Panel de propiedades</h2>
+      <p>Selecciona un nodo o una conexión del lienzo para editar su configuración.</p>
+      <ul>
+        <li>Configura etiquetas, condiciones y scripts.</li>
+        <li>Edita puertos y destinos de conexión.</li>
+        <li>Elimina elementos seleccionados desde este panel.</li>
+      </ul>
     </aside>
   </ng-template>
 </main>

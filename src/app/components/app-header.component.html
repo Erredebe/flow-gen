@@ -3,23 +3,57 @@
     <h1>iv-flow</h1>
     <p>Editor visual de automatización e IA</p>
   </div>
-  <div class="actions">
-    <input [ngModel]="flowName" (ngModelChange)="flowNameChange.emit($event)" placeholder="Nombre del flujo" />
-    <button class="primary" (click)="newFlow.emit()">Nuevo</button>
-    <button (click)="undo.emit()">Deshacer</button>
-    <button (click)="redo.emit()">Rehacer</button>
-    <button (click)="validateFlow.emit()">Validar</button>
-    <button class="primary" (click)="runFlow.emit()" [disabled]="running">Run</button>
-    <button (click)="saveFlow.emit()">Guardar</button>
-    <button (click)="toggleContentManager.emit()">Gestor de Contenido</button>
-    <button (click)="toggleMarkdownStudio.emit()">Markdown Studio</button>
-    <button (click)="toggleDarkMode.emit()">{{ darkMode ? '☀️' : '🌙' }}</button>
-    <button (click)="exportFlow.emit()">Exportar JSON</button>
-    <button (click)="exportFlowAsMarkdown.emit()">Exportar MD</button>
-    <label class="file-input">
-      Importar
-      <input type="file" accept="application/json" (change)="importFlow.emit($event)" />
-    </label>
+
+  <div class="actions" role="toolbar" aria-label="Barra de herramientas principal">
+    <div class="flow-name-group">
+      <label class="input-label" for="flow-name-input">Flujo</label>
+      <input
+        id="flow-name-input"
+        [ngModel]="flowName"
+        (ngModelChange)="flowNameChange.emit($event)"
+        placeholder="Nombre del flujo"
+        aria-label="Nombre del flujo" />
+    </div>
+
+    <details class="toolbar-menu">
+      <summary>Archivo</summary>
+      <div class="menu-content">
+        <button type="button" (click)="newFlow.emit()">Nuevo</button>
+        <button type="button" (click)="saveFlow.emit()">Guardar</button>
+        <button type="button" (click)="exportFlow.emit()">Exportar JSON</button>
+        <button type="button" (click)="exportFlowAsMarkdown.emit()">Exportar MD</button>
+        <label class="file-input" title="Importar flujo desde archivo JSON">
+          Importar JSON
+          <input type="file" accept="application/json" (change)="importFlow.emit($event)" />
+        </label>
+      </div>
+    </details>
+
+    <details class="toolbar-menu">
+      <summary>Edición</summary>
+      <div class="menu-content menu-content-inline">
+        <button type="button" (click)="undo.emit()" title="Deshacer">↶ Deshacer</button>
+        <button type="button" (click)="redo.emit()" title="Rehacer">↷ Rehacer</button>
+        <button type="button" (click)="validateFlow.emit()" title="Validar flujo">✓ Validar</button>
+      </div>
+    </details>
+
+    <details class="toolbar-menu">
+      <summary>Herramientas</summary>
+      <div class="menu-content">
+        <button type="button" (click)="toggleContentManager.emit()">Gestor de contenido</button>
+        <button type="button" (click)="toggleMarkdownStudio.emit()">Markdown Studio</button>
+        <button type="button" (click)="togglePanelSwapMode.emit()">{{ panelSwapMode ? 'Desactivar intercambio de paneles' : 'Activar intercambio de paneles' }}</button>
+      </div>
+    </details>
+
+    <button class="primary run-cta" type="button" (click)="runFlow.emit()" [disabled]="running">
+      {{ running ? 'Ejecutando…' : 'Ejecutar flujo' }}
+    </button>
+
+    <button class="theme-toggle" type="button" (click)="toggleDarkMode.emit()" [attr.aria-label]="darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+      {{ darkMode ? '☀️' : '🌙' }}
+    </button>
   </div>
 </header>
 
@@ -27,11 +61,11 @@
   <div class="tutorial-wrap">
     <div class="tutorial-content">
       <strong>Tutorial:</strong> {{ tutorialText }}
-      <button (click)="nextTutorialStep.emit()">Siguiente paso</button>
+      <button type="button" (click)="nextTutorialStep.emit()">Siguiente paso</button>
     </div>
     <div class="demo-actions">
-      <button *ngFor="let demo of demos; let i = index" (click)="loadDemo.emit(i)">Cargar {{ demo.name }}</button>
+      <button type="button" *ngFor="let demo of demos; let i = index" (click)="loadDemo.emit(i)">Cargar {{ demo.name }}</button>
     </div>
   </div>
-  <button class="close-tutorial" (click)="closeTutorial.emit()">✕</button>
+  <button class="close-tutorial" type="button" (click)="closeTutorial.emit()" aria-label="Cerrar tutorial">✕</button>
 </section>

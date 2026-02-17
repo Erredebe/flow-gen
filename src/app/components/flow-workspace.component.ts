@@ -3,11 +3,14 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ContextChange, NodeTemplate } from '../models/app-ui.model';
 import { ExecutionContextSnapshot, FlowConnection, FlowDefinition, FlowNode, NodeType, ScriptSnippet } from '../models/flow.model';
+import { CollapsiblePanelComponent } from './collapsible-panel.component';
+
+type PanelZone = 'left' | 'right' | 'bottom';
 
 @Component({
   selector: 'app-flow-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CollapsiblePanelComponent],
   templateUrl: './flow-workspace.component.html'
 })
 export class FlowWorkspaceComponent {
@@ -31,6 +34,10 @@ export class FlowWorkspaceComponent {
   @Input({ required: true }) scriptDraftName = '';
   @Input({ required: true }) selectedScriptId = '';
   @Input({ required: true }) scriptLibrary: ScriptSnippet[] = [];
+  @Input({ required: true }) validationErrors: string[] = [];
+  @Input({ required: true }) logs: string[] = [];
+  @Input({ required: true }) panelSwapMode = false;
+  @Input({ required: true }) panelZones: Record<string, PanelZone> = {};
 
   @Input({ required: true }) nodeLabel!: (nodeId: string) => string;
   @Input({ required: true }) contextEntries!: (context: Record<string, unknown>) => { key: string; value: string }[];
@@ -57,4 +64,14 @@ export class FlowWorkspaceComponent {
   @Output() deleteSavedScript = new EventEmitter<string>();
   @Output() deleteSelectedNode = new EventEmitter<void>();
   @Output() updateConnection = new EventEmitter<void>();
+  @Output() resetConsole = new EventEmitter<void>();
+  @Output() movePanel = new EventEmitter<{ panelId: string; zone: PanelZone }>();
+
+  isPanelIn(panelId: string, zone: PanelZone): boolean {
+    return this.panelZones[panelId] === zone;
+  }
+
+  move(panelId: string, zone: PanelZone): void {
+    this.movePanel.emit({ panelId, zone });
+  }
 }

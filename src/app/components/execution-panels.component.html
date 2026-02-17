@@ -1,17 +1,15 @@
-<section class="bottom-panels">
-  <article>
-    <h3>Validación</h3>
+<section class="bottom-panels" [class.logs-first]="logsFirst">
+  <app-collapsible-panel title="Validación" [open]="false" panelClass="bottom-panel-card bottom-panel-validation">
     <ul>
       <li *ngFor="let error of validationErrors">{{ error }}</li>
     </ul>
     <p *ngIf="!validationErrors.length">Sin errores de validación.</p>
-  </article>
+  </app-collapsible-panel>
 
-  <article>
-    <h3>Logs de ejecución</h3>
-    <button (click)="resetConsole.emit()">Reset consola</button>
+  <app-collapsible-panel title="Logs de ejecución" [open]="false" panelClass="bottom-panel-card bottom-panel-logs">
+    <button type="button" (click)="resetConsole.emit()">Reset consola</button>
     <ul>
       <li *ngFor="let line of logs">{{ line }}</li>
     </ul>
-  </article>
+  </app-collapsible-panel>
 </section>

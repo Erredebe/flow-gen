@@ -115,101 +115,104 @@
   </section>
 
   <aside class="properties" *ngIf="selectedNode as node; else connectionProperties">
-    <h2>Configuración de nodo</h2>
-    <label>
-      Etiqueta
-      <input [(ngModel)]="node.data.label" (ngModelChange)="updateNode.emit()" />
-    </label>
+    <app-collapsible-panel title="Configuración de nodo" [open]="true" panelClass="properties-panel-card">
+      <label>
+        Etiqueta
+        <input [(ngModel)]="node.data.label" (ngModelChange)="updateNode.emit()" />
+      </label>
 
-    <label>
-      Descripción
-      <textarea [(ngModel)]="node.data.description" (ngModelChange)="updateNode.emit()" rows="3" placeholder="Describe para qué sirve este nodo"></textarea>
-    </label>
+      <label>
+        Descripción
+        <textarea [(ngModel)]="node.data.description" (ngModelChange)="updateNode.emit()" rows="3" placeholder="Describe para qué sirve este nodo"></textarea>
+      </label>
 
-    <label *ngIf="node.type === 'decision'">
-      Condición
-      <input [(ngModel)]="node.data.condition" (ngModelChange)="updateNode.emit()" placeholder="context.valor > 10" />
-    </label>
+      <label *ngIf="node.type === 'decision'">
+        Condición
+        <input [(ngModel)]="node.data.condition" (ngModelChange)="updateNode.emit()" placeholder="context.valor > 10" />
+      </label>
 
-    <label *ngIf="node.type === 'script'">
-      Script JS/TS
-      <textarea [(ngModel)]="node.data.script" (ngModelChange)="updateNode.emit()" rows="6" placeholder="Escribe aquí tu script"></textarea>
-    </label>
+      <label *ngIf="node.type === 'script'">
+        Script JS/TS
+        <textarea [(ngModel)]="node.data.script" (ngModelChange)="updateNode.emit()" rows="6" placeholder="Escribe aquí tu script"></textarea>
+      </label>
 
-    <div class="script-tools" *ngIf="node.type === 'script'">
-      <input [ngModel]="scriptDraftName" (ngModelChange)="scriptDraftNameChange.emit($event)" placeholder="Nombre para guardar script" />
-      <button (click)="saveCurrentScript.emit()">Guardar script</button>
+      <div class="script-tools" *ngIf="node.type === 'script'">
+        <input [ngModel]="scriptDraftName" (ngModelChange)="scriptDraftNameChange.emit($event)" placeholder="Nombre para guardar script" />
+        <button (click)="saveCurrentScript.emit()">Guardar script</button>
 
-      <select [ngModel]="selectedScriptId" (ngModelChange)="selectedScriptIdChange.emit($event)">
-        <option [ngValue]="''">Seleccionar script guardado</option>
-        <option *ngFor="let script of scriptLibrary" [value]="script.id">{{ script.name }}</option>
-      </select>
-      <button [disabled]="!selectedScriptId" (click)="applySavedScript.emit(selectedScriptId)">Aplicar script guardado</button>
+        <select [ngModel]="selectedScriptId" (ngModelChange)="selectedScriptIdChange.emit($event)">
+          <option [ngValue]="''">Seleccionar script guardado</option>
+          <option *ngFor="let script of scriptLibrary" [value]="script.id">{{ script.name }}</option>
+        </select>
+        <button [disabled]="!selectedScriptId" (click)="applySavedScript.emit(selectedScriptId)">Aplicar script guardado</button>
 
-      <div class="saved-item" *ngFor="let script of scriptLibrary">
-        <small>{{ script.name }}</small>
-        <button class="danger" (click)="deleteSavedScript.emit(script.id)">✕</button>
+        <div class="saved-item" *ngFor="let script of scriptLibrary">
+          <small>{{ script.name }}</small>
+          <button class="danger" (click)="deleteSavedScript.emit(script.id)">✕</button>
+        </div>
       </div>
-    </div>
 
-    <label *ngIf="node.type === 'api'">
-      URL API
-      <input [(ngModel)]="node.data.apiUrl" (ngModelChange)="updateNode.emit()" placeholder="https://api.example.com" />
-    </label>
+      <label *ngIf="node.type === 'api'">
+        URL API
+        <input [(ngModel)]="node.data.apiUrl" (ngModelChange)="updateNode.emit()" placeholder="https://api.example.com" />
+      </label>
 
-    <label *ngIf="node.type === 'api'">
-      Método
-      <select [(ngModel)]="node.data.apiMethod" (ngModelChange)="updateNode.emit()">
-        <option>GET</option>
-        <option>POST</option>
-      </select>
-    </label>
+      <label *ngIf="node.type === 'api'">
+        Método
+        <select [(ngModel)]="node.data.apiMethod" (ngModelChange)="updateNode.emit()">
+          <option>GET</option>
+          <option>POST</option>
+        </select>
+      </label>
 
-    <label *ngIf="node.type === 'api' && node.data.apiMethod === 'POST'">
-      Body
-      <textarea [(ngModel)]="node.data.apiBody" (ngModelChange)="updateNode.emit()" rows="5"></textarea>
-    </label>
+      <label *ngIf="node.type === 'api' && node.data.apiMethod === 'POST'">
+        Body
+        <textarea [(ngModel)]="node.data.apiBody" (ngModelChange)="updateNode.emit()" rows="5"></textarea>
+      </label>
 
-    <button class="danger" (click)="deleteSelectedNode.emit()" style="width: 100%; margin-top: auto;">Eliminar nodo</button>
+      <button class="danger" (click)="deleteSelectedNode.emit()" style="width: 100%; margin-top: auto;">Eliminar nodo</button>
+    </app-collapsible-panel>
   </aside>
 
   <ng-template #connectionProperties>
     <aside class="properties" *ngIf="selectedConnection as connection; else selectionGuide">
-      <h2>Configuración de conexión</h2>
-      <p><strong>Origen:</strong> {{ nodeLabel(connection.fromNodeId) }}</p>
-      <p><strong>Destino:</strong> {{ nodeLabel(connection.toNodeId) }}</p>
+      <app-collapsible-panel title="Configuración de conexión" [open]="true" panelClass="properties-panel-card">
+        <p><strong>Origen:</strong> {{ nodeLabel(connection.fromNodeId) }}</p>
+        <p><strong>Destino:</strong> {{ nodeLabel(connection.toNodeId) }}</p>
 
-      <label>
-        Puerto de salida
-        <select [(ngModel)]="connection.fromPort" (ngModelChange)="updateConnection.emit()">
-          <option value="default">default</option>
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select>
-      </label>
+        <label>
+          Puerto de salida
+          <select [(ngModel)]="connection.fromPort" (ngModelChange)="updateConnection.emit()">
+            <option value="default">default</option>
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+        </label>
 
-      <label>
-        Nodo destino
-        <select [(ngModel)]="connection.toNodeId" (ngModelChange)="updateConnection.emit()">
-          <option *ngFor="let nodeOption of nodes" [value]="nodeOption.id" [disabled]="nodeOption.id === connection.fromNodeId">
-            {{ nodeOption.data.label }}
-          </option>
-        </select>
-      </label>
+        <label>
+          Nodo destino
+          <select [(ngModel)]="connection.toNodeId" (ngModelChange)="updateConnection.emit()">
+            <option *ngFor="let nodeOption of nodes" [value]="nodeOption.id" [disabled]="nodeOption.id === connection.fromNodeId">
+              {{ nodeOption.data.label }}
+            </option>
+          </select>
+        </label>
 
-      <button class="danger" (click)="removeConnection.emit(connection.id)" style="width: 100%; margin-top: auto;">Eliminar conexión</button>
+        <button class="danger" (click)="removeConnection.emit(connection.id)" style="width: 100%; margin-top: auto;">Eliminar conexión</button>
+      </app-collapsible-panel>
     </aside>
   </ng-template>
 
   <ng-template #selectionGuide>
     <aside class="properties properties-guide">
-      <h2>Panel de propiedades</h2>
-      <p>Selecciona un nodo o una conexión del lienzo para editar su configuración.</p>
-      <ul>
-        <li>Configura etiquetas, condiciones y scripts.</li>
-        <li>Edita puertos y destinos de conexión.</li>
-        <li>Elimina elementos seleccionados desde este panel.</li>
-      </ul>
+      <app-collapsible-panel title="Panel de propiedades" [open]="true" panelClass="properties-panel-card">
+        <p>Selecciona un nodo o una conexión del lienzo para editar su configuración.</p>
+        <ul>
+          <li>Configura etiquetas, condiciones y scripts.</li>
+          <li>Edita puertos y destinos de conexión.</li>
+          <li>Elimina elementos seleccionados desde este panel.</li>
+        </ul>
+      </app-collapsible-panel>
     </aside>
   </ng-template>
 </main>

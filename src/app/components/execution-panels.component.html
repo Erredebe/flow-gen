@@ -1,12 +1,16 @@
-<section class="bottom-panels">
-  <app-collapsible-panel title="Validación" [open]="true" panelClass="bottom-panel-card">
+<section class="bottom-panels-toolbar">
+  <button type="button" (click)="swapPanels()">Intercambiar paneles</button>
+</section>
+
+<section class="bottom-panels" [class.logs-first]="logsFirst">
+  <app-collapsible-panel title="Validación" [open]="false" panelClass="bottom-panel-card bottom-panel-validation">
     <ul>
       <li *ngFor="let error of validationErrors">{{ error }}</li>
     </ul>
     <p *ngIf="!validationErrors.length">Sin errores de validación.</p>
   </app-collapsible-panel>
 
-  <app-collapsible-panel title="Logs de ejecución" [open]="true" panelClass="bottom-panel-card">
+  <app-collapsible-panel title="Logs de ejecución" [open]="false" panelClass="bottom-panel-card bottom-panel-logs">
     <button type="button" (click)="resetConsole.emit()">Reset consola</button>
     <ul>
       <li *ngFor="let line of logs">{{ line }}</li>

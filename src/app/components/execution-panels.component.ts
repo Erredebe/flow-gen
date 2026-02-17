@@ -13,4 +13,10 @@ export class ExecutionPanelsComponent {
   @Input({ required: true }) logs: string[] = [];
 
   @Output() resetConsole = new EventEmitter<void>();
+
+  logsFirst = false;
+
+  swapPanels(): void {
+    this.logsFirst = !this.logsFirst;
+  }
 }

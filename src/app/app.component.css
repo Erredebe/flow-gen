@@ -267,6 +267,18 @@ h2, h3, h4 {
   align-items: center;
   gap: var(--space-2);
   list-style: none;
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-md);
+}
+
+.sidebar-card:not([open]) summary {
+  background: color-mix(in srgb, var(--bg-sidebar) 75%, transparent);
+}
+
+.sidebar-card[open] summary {
+  border-bottom: 1px solid var(--border-color);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .sidebar-card summary::-webkit-details-marker {
@@ -292,6 +304,10 @@ h2, h3, h4 {
 
 .panel-content {
   margin-top: var(--space-3);
+}
+
+.sidebar-card:not([open]) .panel-content {
+  display: none;
 }
 
 app-collapsible-panel {
@@ -489,6 +505,21 @@ app-collapsible-panel {
 }
 
 /* Bottom Panels */
+
+.bottom-panels-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 var(--space-4);
+}
+
+.bottom-panels.logs-first .bottom-panel-validation {
+  order: 2;
+}
+
+.bottom-panels.logs-first .bottom-panel-logs {
+  order: 1;
+}
+
 .bottom-panels {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -496,7 +527,7 @@ app-collapsible-panel {
   padding: var(--space-4);
 }
 
-.bottom-panel-card {
+.bottom-panel-card[open] {
   min-height: 200px;
 }
 
@@ -667,6 +698,12 @@ app-collapsible-panel {
   flex-direction: column;
   gap: var(--space-2);
   color: var(--text-muted);
+}
+
+.properties-panel-card .panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 /* Modal Styling */

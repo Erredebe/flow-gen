@@ -241,45 +241,55 @@
     </ng-template>
   </main>
 
-  <section class="markdown-studio" *ngIf="showMarkdownStudio">
-    <article class="markdown-editor">
-      <div class="markdown-toolbar">
-        <h3>Editor Markdown</h3>
-        <div class="toolbar-actions">
-          <button (click)="generateMarkdownFromFlow()">Generar desde flujo</button>
-          <button (click)="saveMarkdownDraft()">Guardar en localStorage</button>
-          <button (click)="exportSelectedMarkdown()">Exportar .md</button>
-          <button class="danger" (click)="toggleMarkdownStudio()">Cerrar</button>
-        </div>
+  <div class="modal-overlay" *ngIf="showMarkdownStudio" (click)="toggleMarkdownStudio()">
+    <div class="modal-content markdown-modal-content glass" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Markdown Studio</h2>
+        <button class="close-modal-btn" (click)="toggleMarkdownStudio()">✕</button>
       </div>
 
-      <label>
-        Título
-        <input [(ngModel)]="markdownDraftTitle" placeholder="Título del documento" />
-      </label>
-      <label>
-        Contenido Markdown
-        <textarea
-          rows="18"
-          [(ngModel)]="markdownDraftContent"
-          (ngModelChange)="renderMarkdownPreview()"
-          placeholder="# Documento del flujo"></textarea>
-      </label>
-    </article>
+      <div class="modal-body markdown-modal-body">
+        <section class="markdown-studio">
+          <article class="markdown-editor">
+            <div class="markdown-toolbar">
+              <h3>Editor Markdown</h3>
+              <div class="toolbar-actions">
+                <button (click)="generateMarkdownFromFlow()">Generar desde flujo</button>
+                <button (click)="saveMarkdownDraft()">Guardar en localStorage</button>
+                <button (click)="exportSelectedMarkdown()">Exportar .md</button>
+              </div>
+            </div>
 
-    <article class="markdown-preview">
-      <h3>Visor Markdown</h3>
-      <div class="preview-content" [innerHTML]="markdownPreviewHtml"></div>
+            <label>
+              <span>Título</span>
+              <input [(ngModel)]="markdownDraftTitle" placeholder="Título del documento" />
+            </label>
+            <label>
+              <span>Contenido Markdown</span>
+              <textarea
+                rows="18"
+                [(ngModel)]="markdownDraftContent"
+                (ngModelChange)="renderMarkdownPreview()"
+                placeholder="# Documento del flujo"></textarea>
+            </label>
+          </article>
 
-      <h4>Markdowns guardados</h4>
-      <div class="saved-item" *ngFor="let markdown of markdownLibrary">
-        <button (click)="loadMarkdownForEditing(markdown.id)">{{ markdown.title }}</button>
-        <small>{{ markdown.updatedAt | date:'short' }}</small>
-        <button class="danger" (click)="deleteMarkdown(markdown.id)">✕</button>
+          <article class="markdown-preview">
+            <h3>Visor Markdown</h3>
+            <div class="preview-content" [innerHTML]="markdownPreviewHtml"></div>
+
+            <h4>Markdowns guardados</h4>
+            <div class="saved-item" *ngFor="let markdown of markdownLibrary">
+              <button (click)="loadMarkdownForEditing(markdown.id)">{{ markdown.title }}</button>
+              <small>{{ markdown.updatedAt | date:'short' }}</small>
+              <button class="danger" (click)="deleteMarkdown(markdown.id)">✕</button>
+            </div>
+            <p class="context-empty" *ngIf="!markdownLibrary.length">No hay markdowns guardados en localStorage.</p>
+          </article>
+        </section>
       </div>
-      <p class="context-empty" *ngIf="!markdownLibrary.length">No hay markdowns guardados en localStorage.</p>
-    </article>
-  </section>
+    </div>
+  </div>
 
   <section class="bottom-panels">
     <article>

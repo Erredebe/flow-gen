@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { FlowDefinition, ScriptSnippet } from '../models/flow.model';
+import { FlowDefinition, MarkdownDocument, ScriptSnippet } from '../models/flow.model';
 
 const FLOW_STORAGE_KEY = 'iv-flow-flows';
 const SCRIPT_STORAGE_KEY = 'iv-flow-scripts';
+const MARKDOWN_STORAGE_KEY = 'iv-flow-markdowns';
 
 @Injectable({ providedIn: 'root' })
 export class FlowStorageService {
@@ -47,6 +48,28 @@ export class FlowStorageService {
     const filtered = this.listScripts().filter((script) => script.id !== scriptId);
     localStorage.setItem(SCRIPT_STORAGE_KEY, JSON.stringify(filtered));
   }
+
+  listMarkdowns(): MarkdownDocument[] {
+    return this.readFromStorage<MarkdownDocument>(MARKDOWN_STORAGE_KEY);
+  }
+
+  saveMarkdown(markdown: MarkdownDocument): void {
+    const markdowns = this.listMarkdowns();
+    const existingIndex = markdowns.findIndex((item) => item.id === markdown.id);
+    if (existingIndex >= 0) {
+      markdowns[existingIndex] = markdown;
+    } else {
+      markdowns.push(markdown);
+    }
+
+    localStorage.setItem(MARKDOWN_STORAGE_KEY, JSON.stringify(markdowns));
+  }
+
+  deleteMarkdown(markdownId: string): void {
+    const filtered = this.listMarkdowns().filter((markdown) => markdown.id !== markdownId);
+    localStorage.setItem(MARKDOWN_STORAGE_KEY, JSON.stringify(filtered));
+  }
+
 
   private readFromStorage<T>(key: string): T[] {
     const payload = localStorage.getItem(key);

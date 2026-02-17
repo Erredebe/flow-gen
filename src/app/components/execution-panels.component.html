@@ -1,0 +1,17 @@
+<section class="bottom-panels">
+  <article>
+    <h3>Validación</h3>
+    <ul>
+      <li *ngFor="let error of validationErrors">{{ error }}</li>
+    </ul>
+    <p *ngIf="!validationErrors.length">Sin errores de validación.</p>
+  </article>
+
+  <article>
+    <h3>Logs de ejecución</h3>
+    <button (click)="resetConsole.emit()">Reset consola</button>
+    <ul>
+      <li *ngFor="let line of logs">{{ line }}</li>
+    </ul>
+  </article>
+</section>

@@ -197,7 +197,15 @@ input:focus, select:focus, textarea:focus {
   flex-grow: 1;
 }
 
-.sidebar, .properties {
+.left-panels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+.properties {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -218,35 +226,49 @@ h2, h3, h4 {
 }
 
 
-.sidebar-section {
+.sidebar-card {
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-sidebar);
-  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow);
+  padding: var(--space-3);
 }
 
-.sidebar-section summary {
+.sidebar-card summary {
   cursor: pointer;
-  font-weight: 600;
-  padding: var(--space-1) var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   list-style: none;
 }
 
-.sidebar-section summary::-webkit-details-marker {
+.sidebar-card summary::-webkit-details-marker {
   display: none;
 }
 
-.sidebar-section summary::before {
-  content: '▸';
-  margin-right: var(--space-2);
+.sidebar-card summary::before {
+  content: "▸";
+  color: var(--text-muted);
 }
 
-.sidebar-section[open] summary::before {
-  content: '▾';
+.sidebar-card[open] summary::before {
+  content: "▾";
+}
+
+.sidebar-card summary h2,
+.sidebar-card summary h3 {
+  margin: 0;
+}
+
+.palette-content {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 /* Node Palette */
-.sidebar button {
+.palette-content button {
   width: 100%;
   justify-content: flex-start;
   padding: var(--space-3);

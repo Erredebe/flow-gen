@@ -11,12 +11,7 @@ import { CollapsiblePanelComponent } from './collapsible-panel.component';
 export class ExecutionPanelsComponent {
   @Input({ required: true }) validationErrors: string[] = [];
   @Input({ required: true }) logs: string[] = [];
+  @Input({ required: true }) logsFirst = false;
 
   @Output() resetConsole = new EventEmitter<void>();
-
-  logsFirst = false;
-
-  swapPanels(): void {
-    this.logsFirst = !this.logsFirst;
-  }
 }

@@ -19,6 +19,7 @@
     (exportFlow)="exportFlow()"
     (exportFlowAsMarkdown)="exportFlowAsMarkdown()"
     (importFlow)="importFlow($event)"
+    (toggleBottomPanelsOrder)="toggleBottomPanelsOrder()"
     (nextTutorialStep)="nextTutorialStep()"
     (loadDemo)="loadDemo($event)"
     (closeTutorial)="closeTutorial()" />
@@ -87,6 +88,7 @@
   <app-execution-panels
     [validationErrors]="validationErrors"
     [logs]="logs"
+    [logsFirst]="logsPanelFirst"
     (resetConsole)="resetConsole()" />
 
   <app-content-manager-modal

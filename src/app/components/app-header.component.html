@@ -4,8 +4,8 @@
     <p>Editor visual de automatización e IA</p>
   </div>
 
-  <div class="actions" role="toolbar" aria-label="Acciones principales del flujo">
-    <div class="action-group action-group--flow">
+  <div class="actions" role="toolbar" aria-label="Barra de herramientas principal">
+    <div class="flow-name-group">
       <label class="input-label" for="flow-name-input">Flujo</label>
       <input
         id="flow-name-input"
@@ -13,38 +13,47 @@
         (ngModelChange)="flowNameChange.emit($event)"
         placeholder="Nombre del flujo"
         aria-label="Nombre del flujo" />
-      <button class="primary" type="button" (click)="newFlow.emit()" title="Crear un nuevo flujo">Nuevo</button>
-      <button type="button" (click)="saveFlow.emit()" title="Guardar flujo actual">Guardar</button>
     </div>
 
-    <div class="action-group action-group--edit">
-      <span class="action-group-title">Edición</span>
-      <button type="button" (click)="undo.emit()" title="Deshacer último cambio">Deshacer</button>
-      <button type="button" (click)="redo.emit()" title="Rehacer último cambio">Rehacer</button>
-      <button type="button" (click)="validateFlow.emit()" title="Validar estructura del flujo">Validar</button>
-      <button class="primary" type="button" (click)="runFlow.emit()" [disabled]="running" title="Ejecutar flujo">
-        {{ running ? 'Ejecutando…' : 'Ejecutar' }}
-      </button>
-    </div>
+    <details class="toolbar-menu">
+      <summary>Archivo</summary>
+      <div class="menu-content">
+        <button type="button" (click)="newFlow.emit()">Nuevo</button>
+        <button type="button" (click)="saveFlow.emit()">Guardar</button>
+        <button type="button" (click)="exportFlow.emit()">Exportar JSON</button>
+        <button type="button" (click)="exportFlowAsMarkdown.emit()">Exportar MD</button>
+        <label class="file-input" title="Importar flujo desde archivo JSON">
+          Importar JSON
+          <input type="file" accept="application/json" (change)="importFlow.emit($event)" />
+        </label>
+      </div>
+    </details>
 
-    <div class="action-group action-group--tools">
-      <span class="action-group-title">Recursos</span>
-      <button type="button" (click)="toggleContentManager.emit()">Gestor de contenido</button>
-      <button type="button" (click)="toggleMarkdownStudio.emit()">Markdown Studio</button>
-      <button type="button" (click)="toggleDarkMode.emit()" [attr.aria-label]="darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
-        {{ darkMode ? '☀️ Claro' : '🌙 Oscuro' }}
-      </button>
-    </div>
+    <details class="toolbar-menu">
+      <summary>Edición</summary>
+      <div class="menu-content menu-content-inline">
+        <button type="button" (click)="undo.emit()" title="Deshacer">↶ Deshacer</button>
+        <button type="button" (click)="redo.emit()" title="Rehacer">↷ Rehacer</button>
+        <button type="button" (click)="validateFlow.emit()" title="Validar flujo">✓ Validar</button>
+      </div>
+    </details>
 
-    <div class="action-group action-group--io">
-      <span class="action-group-title">Importar/Exportar</span>
-      <button type="button" (click)="exportFlow.emit()">Exportar JSON</button>
-      <button type="button" (click)="exportFlowAsMarkdown.emit()">Exportar MD</button>
-      <label class="file-input" title="Importar flujo desde archivo JSON">
-        Importar JSON
-        <input type="file" accept="application/json" (change)="importFlow.emit($event)" />
-      </label>
-    </div>
+    <details class="toolbar-menu">
+      <summary>Herramientas</summary>
+      <div class="menu-content">
+        <button type="button" (click)="toggleContentManager.emit()">Gestor de contenido</button>
+        <button type="button" (click)="toggleMarkdownStudio.emit()">Markdown Studio</button>
+        <button type="button" (click)="toggleBottomPanelsOrder.emit()">Intercambiar paneles inferiores</button>
+      </div>
+    </details>
+
+    <button class="primary run-cta" type="button" (click)="runFlow.emit()" [disabled]="running">
+      {{ running ? 'Ejecutando…' : 'Ejecutar flujo' }}
+    </button>
+
+    <button class="theme-toggle" type="button" (click)="toggleDarkMode.emit()" [attr.aria-label]="darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+      {{ darkMode ? '☀️' : '🌙' }}
+    </button>
   </div>
 </header>
 

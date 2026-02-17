@@ -78,13 +78,13 @@
 
 .actions {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
   flex: 1;
 }
 
-.action-group {
+.flow-name-group {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -94,7 +94,6 @@
   background: color-mix(in srgb, var(--bg-panel) 85%, transparent);
 }
 
-.action-group-title,
 .input-label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -103,8 +102,75 @@
   color: var(--text-muted);
 }
 
-.action-group--flow input {
+.flow-name-group input {
   min-width: 220px;
+}
+
+.toolbar-menu {
+  position: relative;
+}
+
+.toolbar-menu > summary {
+  list-style: none;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.9rem;
+  background: var(--bg-panel);
+  font-weight: 600;
+}
+
+.toolbar-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.toolbar-menu > summary::after {
+  content: '▾';
+  margin-left: var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.toolbar-menu[open] > summary {
+  border-color: var(--primary-300);
+}
+
+.menu-content {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  min-width: 220px;
+  padding: var(--space-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.menu-content.menu-content-inline {
+  min-width: 250px;
+}
+
+.menu-content button,
+.menu-content .file-input {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.run-cta {
+  padding: 0.65rem 1.15rem;
+  font-weight: 700;
+}
+
+.theme-toggle {
+  margin-left: auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
 }
 
 /* Forms & Buttons */
@@ -505,12 +571,6 @@ app-collapsible-panel {
 }
 
 /* Bottom Panels */
-
-.bottom-panels-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 var(--space-4);
-}
 
 .bottom-panels.logs-first .bottom-panel-validation {
   order: 2;
@@ -942,14 +1002,28 @@ app-collapsible-panel {
     width: 100%;
   }
 
-  .action-group {
+  .flow-name-group {
     width: 100%;
     flex-wrap: wrap;
   }
 
-  .action-group--flow input {
+  .flow-name-group input {
     min-width: 0;
     flex: 1;
+  }
+
+  .toolbar-menu,
+  .run-cta {
+    width: 100%;
+  }
+
+  .toolbar-menu > summary {
+    width: 100%;
+  }
+
+  .menu-content {
+    position: static;
+    margin-top: var(--space-2);
   }
 
   .left-panels,

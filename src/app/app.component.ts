@@ -57,6 +57,7 @@ export class AppComponent {
   panX = 0;
   panY = 0;
   showContentManager = false;
+  logsPanelFirst = false;
 
   executionContext: Record<string, unknown> = {};
   contextHistory: ExecutionContextSnapshot[] = [];
@@ -318,6 +319,10 @@ export class AppComponent {
 
   resetConsole(): void {
     this.logs = [];
+  }
+
+  toggleBottomPanelsOrder(): void {
+    this.logsPanelFirst = !this.logsPanelFirst;
   }
 
   saveFlow(): void {

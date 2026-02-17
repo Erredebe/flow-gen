@@ -37,25 +37,6 @@
           <code>{{ item.value }}</code>
         </div>
       </div>
-      <div class="context-history" *ngIf="contextChangeLog.length">
-        <h4>Variables declaradas/cambiadas</h4>
-        <div class="context-row" *ngFor="let change of contextChangeLog">
-          <small>{{ change.nodeLabel }}</small>
-          <strong>{{ change.key }}</strong>
-          <code>{{ change.value }}</code>
-        </div>
-      </div>
-      <div class="context-history" *ngIf="contextHistory.length">
-        <h4>Historial por nodo</h4>
-        <details *ngFor="let snapshot of contextHistory; let idx = index" class="context-step">
-          <summary>#{{ idx + 1 }} {{ snapshot.nodeLabel }}</summary>
-          <div class="context-row" *ngFor="let item of contextEntries(snapshot.context)">
-            <strong>{{ item.key }}</strong>
-            <code>{{ item.value }}</code>
-          </div>
-          <p class="context-empty" *ngIf="!contextEntries(snapshot.context).length">Sin variables en este punto.</p>
-        </details>
-      </div>
     </app-collapsible-panel>
 
     <app-collapsible-panel title="Conexiones" [open]="true" panelClass="connection-list" *ngIf="connections.length && isPanelIn('connections', 'left')">
@@ -97,7 +78,7 @@
     </div>
   </section>
 
-  <aside class="properties">
+  <aside class="right-panels properties">
     <app-collapsible-panel title="Configuración" [open]="true" panelClass="properties-panel-card" *ngIf="isPanelIn('properties', 'right')">
       <div class="panel-swap-controls" *ngIf="panelSwapMode">
         <button type="button" (click)="move('properties','left')">Izquierda</button>
@@ -108,18 +89,6 @@
         <label>Descripción <textarea [(ngModel)]="node.data.description" (ngModelChange)="updateNode.emit()" rows="3" placeholder="Describe para qué sirve este nodo"></textarea></label>
         <label *ngIf="node.type === 'decision'">Condición <input [(ngModel)]="node.data.condition" (ngModelChange)="updateNode.emit()" placeholder="context.valor > 10" /></label>
         <label *ngIf="node.type === 'script'">Script JS/TS <textarea [(ngModel)]="node.data.script" (ngModelChange)="updateNode.emit()" rows="6" placeholder="Escribe aquí tu script"></textarea></label>
-        <div class="script-tools" *ngIf="node.type === 'script'">
-          <input [ngModel]="scriptDraftName" (ngModelChange)="scriptDraftNameChange.emit($event)" placeholder="Nombre para guardar script" />
-          <button (click)="saveCurrentScript.emit()">Guardar script</button>
-          <select [ngModel]="selectedScriptId" (ngModelChange)="selectedScriptIdChange.emit($event)">
-            <option [ngValue]="''">Seleccionar script guardado</option>
-            <option *ngFor="let script of scriptLibrary" [value]="script.id">{{ script.name }}</option>
-          </select>
-          <button [disabled]="!selectedScriptId" (click)="applySavedScript.emit(selectedScriptId)">Aplicar script guardado</button>
-        </div>
-        <label *ngIf="node.type === 'api'">URL API <input [(ngModel)]="node.data.apiUrl" (ngModelChange)="updateNode.emit()" placeholder="https://api.example.com" /></label>
-        <label *ngIf="node.type === 'api'">Método <select [(ngModel)]="node.data.apiMethod" (ngModelChange)="updateNode.emit()"><option>GET</option><option>POST</option></select></label>
-        <label *ngIf="node.type === 'api' && node.data.apiMethod === 'POST'">Body <textarea [(ngModel)]="node.data.apiBody" (ngModelChange)="updateNode.emit()" rows="5"></textarea></label>
         <button class="danger" (click)="deleteSelectedNode.emit()" style="width: 100%;">Eliminar nodo</button>
       </ng-container>
       <ng-template #connectionOrGuide>
@@ -134,75 +103,82 @@
               <option *ngFor="let nodeOption of nodes" [value]="nodeOption.id" [disabled]="nodeOption.id === connection.fromNodeId">{{ nodeOption.data.label }}</option>
             </select>
           </label>
-          <button class="danger" (click)="removeConnection.emit(connection.id)" style="width: 100%;">Eliminar conexión</button>
         </ng-container>
       </ng-template>
-      <ng-template #selectionGuide>
-        <p>Selecciona un nodo o conexión del lienzo para editar su configuración.</p>
-      </ng-template>
+      <ng-template #selectionGuide><p>Selecciona un nodo o conexión del lienzo para editar su configuración.</p></ng-template>
+    </app-collapsible-panel>
+
+    <app-collapsible-panel title="Paleta de nodos" [open]="false" *ngIf="isPanelIn('palette', 'right')">
+      <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('palette','left')">Izquierda</button><button type="button" (click)="move('palette','bottom')">Abajo</button></div>
+      <div class="palette-content"><button *ngFor="let template of templates" [style.border-left-color]="template.color" (click)="addNode.emit(template.type)"><span>{{ template.icon }}</span>{{ template.label }}</button></div>
+    </app-collapsible-panel>
+
+    <app-collapsible-panel title="Flujos guardados" [open]="false" *ngIf="isPanelIn('savedFlows', 'right')">
+      <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('savedFlows','left')">Izquierda</button><button type="button" (click)="move('savedFlows','bottom')">Abajo</button></div>
+      <div *ngFor="let flow of savedFlows" class="saved-item"><button (click)="loadFlow.emit(flow.id)">{{ flow.name }}</button><button class="danger" (click)="deleteFlow.emit(flow.id)">✕</button></div>
+    </app-collapsible-panel>
+
+    <app-collapsible-panel title="Contexto de ejecución" [open]="false" panelClass="context-panel" *ngIf="isPanelIn('context', 'right')">
+      <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('context','left')">Izquierda</button><button type="button" (click)="move('context','bottom')">Abajo</button></div>
+      <div class="context-empty" *ngIf="!contextEntries(executionContext).length">Aún no hay contexto.</div>
+      <div class="context-row" *ngFor="let item of contextEntries(executionContext)"><strong>{{ item.key }}</strong><code>{{ item.value }}</code></div>
+    </app-collapsible-panel>
+
+    <app-collapsible-panel title="Conexiones" [open]="false" *ngIf="isPanelIn('connections', 'right') && connections.length">
+      <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('connections','left')">Izquierda</button><button type="button" (click)="move('connections','bottom')">Abajo</button></div>
+      <div *ngFor="let connection of connections" class="saved-item" (click)="selectConnection.emit(connection.id)"><small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }}</small></div>
+    </app-collapsible-panel>
+
+    <app-collapsible-panel title="Validación" [open]="false" panelClass="bottom-panel-card" *ngIf="isPanelIn('validation', 'right')">
+      <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('validation','left')">Izquierda</button><button type="button" (click)="move('validation','bottom')">Abajo</button></div>
+      <ul><li *ngFor="let error of validationErrors">{{ error }}</li></ul>
+      <p *ngIf="!validationErrors.length">Sin errores de validación.</p>
+    </app-collapsible-panel>
+
+    <app-collapsible-panel title="Logs de ejecución" [open]="false" panelClass="bottom-panel-card" *ngIf="isPanelIn('logs', 'right')">
+      <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('logs','left')">Izquierda</button><button type="button" (click)="move('logs','bottom')">Abajo</button></div>
+      <button type="button" (click)="resetConsole.emit()">Reset consola</button>
+      <ul><li *ngFor="let line of logs">{{ line }}</li></ul>
     </app-collapsible-panel>
   </aside>
 </main>
 
 <section class="bottom-panels">
   <app-collapsible-panel title="Validación" [open]="false" panelClass="bottom-panel-card" *ngIf="isPanelIn('validation', 'bottom')">
-    <div class="panel-swap-controls" *ngIf="panelSwapMode">
-      <button type="button" (click)="move('validation','left')">Izquierda</button>
-      <button type="button" (click)="move('validation','right')">Derecha</button>
-    </div>
+    <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('validation','left')">Izquierda</button><button type="button" (click)="move('validation','right')">Derecha</button></div>
     <ul><li *ngFor="let error of validationErrors">{{ error }}</li></ul>
     <p *ngIf="!validationErrors.length">Sin errores de validación.</p>
   </app-collapsible-panel>
 
   <app-collapsible-panel title="Logs de ejecución" [open]="false" panelClass="bottom-panel-card" *ngIf="isPanelIn('logs', 'bottom')">
-    <div class="panel-swap-controls" *ngIf="panelSwapMode">
-      <button type="button" (click)="move('logs','left')">Izquierda</button>
-      <button type="button" (click)="move('logs','right')">Derecha</button>
-    </div>
+    <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('logs','left')">Izquierda</button><button type="button" (click)="move('logs','right')">Derecha</button></div>
     <button type="button" (click)="resetConsole.emit()">Reset consola</button>
     <ul><li *ngFor="let line of logs">{{ line }}</li></ul>
   </app-collapsible-panel>
 
   <app-collapsible-panel title="Paleta de nodos" [open]="false" panelClass="bottom-panel-card" *ngIf="isPanelIn('palette', 'bottom')">
-    <div class="panel-swap-controls" *ngIf="panelSwapMode">
-      <button type="button" (click)="move('palette','left')">Izquierda</button>
-      <button type="button" (click)="move('palette','right')">Derecha</button>
-    </div>
-    <div class="palette-content">
-      <button *ngFor="let template of templates" [style.border-left-color]="template.color" (click)="addNode.emit(template.type)"><span>{{ template.icon }}</span>{{ template.label }}</button>
-    </div>
+    <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('palette','left')">Izquierda</button><button type="button" (click)="move('palette','right')">Derecha</button></div>
+    <div class="palette-content"><button *ngFor="let template of templates" [style.border-left-color]="template.color" (click)="addNode.emit(template.type)"><span>{{ template.icon }}</span>{{ template.label }}</button></div>
   </app-collapsible-panel>
 
   <app-collapsible-panel title="Flujos guardados" [open]="false" panelClass="bottom-panel-card" *ngIf="isPanelIn('savedFlows', 'bottom')">
-    <div class="panel-swap-controls" *ngIf="panelSwapMode">
-      <button type="button" (click)="move('savedFlows','left')">Izquierda</button>
-      <button type="button" (click)="move('savedFlows','right')">Derecha</button>
-    </div>
+    <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('savedFlows','left')">Izquierda</button><button type="button" (click)="move('savedFlows','right')">Derecha</button></div>
     <div *ngFor="let flow of savedFlows" class="saved-item"><button (click)="loadFlow.emit(flow.id)">{{ flow.name }}</button><button class="danger" (click)="deleteFlow.emit(flow.id)">✕</button></div>
   </app-collapsible-panel>
 
   <app-collapsible-panel title="Contexto de ejecución" [open]="false" panelClass="bottom-panel-card context-panel" *ngIf="isPanelIn('context', 'bottom')">
-    <div class="panel-swap-controls" *ngIf="panelSwapMode">
-      <button type="button" (click)="move('context','left')">Izquierda</button>
-      <button type="button" (click)="move('context','right')">Derecha</button>
-    </div>
+    <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('context','left')">Izquierda</button><button type="button" (click)="move('context','right')">Derecha</button></div>
     <div class="context-empty" *ngIf="!contextEntries(executionContext).length">Aún no hay contexto.</div>
     <div class="context-row" *ngFor="let item of contextEntries(executionContext)"><strong>{{ item.key }}</strong><code>{{ item.value }}</code></div>
   </app-collapsible-panel>
 
   <app-collapsible-panel title="Conexiones" [open]="false" panelClass="bottom-panel-card" *ngIf="isPanelIn('connections', 'bottom') && connections.length">
-    <div class="panel-swap-controls" *ngIf="panelSwapMode">
-      <button type="button" (click)="move('connections','left')">Izquierda</button>
-      <button type="button" (click)="move('connections','right')">Derecha</button>
-    </div>
+    <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('connections','left')">Izquierda</button><button type="button" (click)="move('connections','right')">Derecha</button></div>
     <div *ngFor="let connection of connections" class="saved-item" (click)="selectConnection.emit(connection.id)"><small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }}</small></div>
   </app-collapsible-panel>
 
   <app-collapsible-panel title="Configuración" [open]="false" panelClass="bottom-panel-card" *ngIf="isPanelIn('properties', 'bottom')">
-    <div class="panel-swap-controls" *ngIf="panelSwapMode">
-      <button type="button" (click)="move('properties','left')">Izquierda</button>
-      <button type="button" (click)="move('properties','right')">Derecha</button>
-    </div>
+    <div class="panel-swap-controls" *ngIf="panelSwapMode"><button type="button" (click)="move('properties','left')">Izquierda</button><button type="button" (click)="move('properties','right')">Derecha</button></div>
     <p>Mueve este panel a izquierda o derecha para editar con mayor espacio.</p>
   </app-collapsible-panel>
 </section>

@@ -290,7 +290,8 @@ input:focus, select:focus, textarea:focus {
   flex-grow: 1;
 }
 
-.left-panels {
+.left-panels,
+.right-panels {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -1040,6 +1041,7 @@ app-collapsible-panel {
   }
 
   .left-panels,
+  .right-panels,
   .properties {
     max-height: none;
   }

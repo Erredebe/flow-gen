@@ -210,6 +210,25 @@ input:focus, select:focus, textarea:focus {
   max-height: calc(100vh - 200px);
 }
 
+.sidebar-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-sidebar);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-card h2,
+.sidebar-card h3 {
+  margin-top: 0;
+}
+
+.palette-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
 h2, h3, h4 {
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -221,7 +240,7 @@ h2, h3, h4 {
 .sidebar-section {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  background: var(--bg-sidebar);
+  background: var(--bg-panel);
   padding: var(--space-2);
 }
 

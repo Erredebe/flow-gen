@@ -1,0 +1,49 @@
+<div class="modal-overlay" *ngIf="showMarkdownStudio" (click)="toggleMarkdownStudio.emit()">
+  <div class="modal-content markdown-modal-content glass" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Markdown Studio</h2>
+      <button class="close-modal-btn" (click)="toggleMarkdownStudio.emit()">✕</button>
+    </div>
+
+    <div class="modal-body markdown-modal-body">
+      <section class="markdown-studio">
+        <article class="markdown-editor">
+          <div class="markdown-toolbar">
+            <h3>Editor Markdown</h3>
+            <div class="toolbar-actions">
+              <button (click)="generateMarkdownFromFlow.emit()">Generar desde flujo</button>
+              <button (click)="saveMarkdownDraft.emit()">Guardar en localStorage</button>
+              <button (click)="exportSelectedMarkdown.emit()">Exportar .md</button>
+            </div>
+          </div>
+
+          <label>
+            <span>Título</span>
+            <input [ngModel]="markdownDraftTitle" (ngModelChange)="markdownDraftTitleChange.emit($event)" placeholder="Título del documento" />
+          </label>
+          <label>
+            <span>Contenido Markdown</span>
+            <textarea
+              rows="18"
+              [ngModel]="markdownDraftContent"
+              (ngModelChange)="markdownDraftContentChange.emit($event)"
+              placeholder="# Documento del flujo"></textarea>
+          </label>
+        </article>
+
+        <article class="markdown-preview">
+          <h3>Visor Markdown</h3>
+          <div class="preview-content" [innerHTML]="markdownPreviewHtml"></div>
+
+          <h4>Markdowns guardados</h4>
+          <div class="saved-item" *ngFor="let markdown of markdownLibrary">
+            <button (click)="loadMarkdownForEditing.emit(markdown.id)">{{ markdown.title }}</button>
+            <small>{{ markdown.updatedAt | date:'short' }}</small>
+            <button class="danger" (click)="deleteMarkdown.emit(markdown.id)">✕</button>
+          </div>
+          <p class="context-empty" *ngIf="!markdownLibrary.length">No hay markdowns guardados en localStorage.</p>
+        </article>
+      </section>
+    </div>
+  </div>
+</div>

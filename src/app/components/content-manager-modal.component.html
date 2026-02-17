@@ -1,0 +1,61 @@
+<div class="modal-overlay" *ngIf="showContentManager" (click)="toggleContentManager.emit()">
+  <div class="modal-content glass" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Gestor de Contenido</h2>
+      <button class="close-modal-btn" (click)="toggleContentManager.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="content-section">
+        <h3>Flujos Guardados</h3>
+        <div class="content-grid">
+          <div *ngFor="let flow of savedFlows" class="content-card">
+            <div class="card-info">
+              <strong>{{ flow.name }}</strong>
+              <small>{{ flow.updatedAt | date:'short' }}</small>
+            </div>
+            <div class="card-actions">
+              <button (click)="loadFlow.emit(flow.id); toggleContentManager.emit()">Cargar</button>
+              <button class="danger" (click)="deleteFlow.emit(flow.id)">Borrar</button>
+            </div>
+          </div>
+          <div *ngIf="savedFlows.length === 0" class="empty-state">No hay flujos guardados.</div>
+        </div>
+      </div>
+
+      <div class="content-section">
+        <h3>Documentación Markdown</h3>
+        <div class="content-grid">
+          <div *ngFor="let markdown of markdownLibrary" class="content-card">
+            <div class="card-info">
+              <strong>{{ markdown.title }}</strong>
+              <small>{{ markdown.flowName }} · {{ markdown.updatedAt | date:'short' }}</small>
+            </div>
+            <div class="card-actions">
+              <button (click)="openMarkdownStudio.emit(markdown.id); toggleContentManager.emit()">Editar</button>
+              <button class="danger" (click)="deleteMarkdown.emit(markdown.id)">Borrar</button>
+            </div>
+          </div>
+          <div *ngIf="markdownLibrary.length === 0" class="empty-state">No hay markdowns guardados.</div>
+        </div>
+      </div>
+
+      <div class="content-section">
+        <h3>Biblioteca de Scripts</h3>
+        <div class="content-grid">
+          <div *ngFor="let script of scriptLibrary" class="content-card">
+            <div class="card-info">
+              <strong>{{ script.name }}</strong>
+              <small>{{ script.updatedAt | date:'short' }}</small>
+            </div>
+            <div class="card-actions">
+              <button (click)="applySavedScript.emit(script.id); toggleContentManager.emit()" [disabled]="!selectedNode || selectedNode.type !== 'script'">Aplicar</button>
+              <button class="danger" (click)="deleteSavedScript.emit(script.id)">Borrar</button>
+            </div>
+          </div>
+          <div *ngIf="scriptLibrary.length === 0" class="empty-state">No hay scripts guardados.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

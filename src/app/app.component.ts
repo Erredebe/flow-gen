@@ -1,32 +1,29 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
 import { ExecutionContextSnapshot, FlowConnection, FlowDefinition, FlowNode, MarkdownDocument, NodeType, ScriptSnippet } from './models/flow.model';
+import { ContextChange, NodeTemplate } from './models/app-ui.model';
 import { FlowEngineService } from './services/flow-engine.service';
 import { FlowStorageService } from './services/flow-storage.service';
 import { FlowValidationService } from './services/flow-validation.service';
-
-interface NodeTemplate {
-  type: NodeType;
-  label: string;
-  color: string;
-  icon: string;
-}
-
-interface ContextChange {
-  nodeId: string;
-  nodeLabel: string;
-  key: string;
-  value: string;
-}
+import { AppHeaderComponent } from './components/app-header.component';
+import { FlowWorkspaceComponent } from './components/flow-workspace.component';
+import { MarkdownStudioModalComponent } from './components/markdown-studio-modal.component';
+import { ExecutionPanelsComponent } from './components/execution-panels.component';
+import { ContentManagerModalComponent } from './components/content-manager-modal.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    AppHeaderComponent,
+    FlowWorkspaceComponent,
+    MarkdownStudioModalComponent,
+    ExecutionPanelsComponent,
+    ContentManagerModalComponent
+  ],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrl: './app.component.css',
+  encapsulation: ViewEncapsulation.None
 })
 export class AppComponent {
   title = 'iv-flow';

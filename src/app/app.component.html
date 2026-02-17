@@ -46,16 +46,16 @@
         {{ template.label }}
       </button>
 
-      <details class="sidebar-section" open>
-        <summary>Flujos guardados</summary>
+      <section class="sidebar-box">
+        <h3>Flujos guardados</h3>
         <div *ngFor="let flow of savedFlows" class="saved-item">
           <button (click)="loadFlow(flow.id)">{{ flow.name }}</button>
           <button class="danger" (click)="deleteFlow(flow.id)">✕</button>
         </div>
-      </details>
+      </section>
 
-      <details class="sidebar-section context-panel" open>
-        <summary>Contexto de ejecución</summary>
+      <section class="sidebar-box context-panel">
+        <h3>Contexto de ejecución</h3>
 
         <div class="context-empty" *ngIf="!contextHistory.length && !contextEntries(executionContext).length">
           Aún no hay contexto. Ejecuta el flujo para ver variables y valores.
@@ -89,10 +89,10 @@
             <p class="context-empty" *ngIf="!contextEntries(snapshot.context).length">Sin variables en este punto.</p>
           </details>
         </div>
-      </details>
+      </section>
 
-      <details class="sidebar-section connection-list" *ngIf="connections.length" open>
-        <summary>Conexiones</summary>
+      <section class="sidebar-box connection-list" *ngIf="connections.length">
+        <h3>Conexiones</h3>
         <div
           *ngFor="let connection of connections"
           class="saved-item"
@@ -101,7 +101,7 @@
           <small>{{ nodeLabel(connection.fromNodeId) }} → {{ nodeLabel(connection.toNodeId) }} ({{ connection.fromPort }})</small>
           <button class="danger" (click)="removeConnection(connection.id); $event.stopPropagation()">✕</button>
         </div>
-      </details>
+      </section>
     </aside>
 
     <section class="canvas-wrapper" (wheel)="onWheel($event)">

@@ -218,31 +218,16 @@ h2, h3, h4 {
 }
 
 
-.sidebar-section {
+.sidebar-box {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-sidebar);
-  padding: var(--space-2);
+  padding: var(--space-3);
 }
 
-.sidebar-section summary {
-  cursor: pointer;
-  font-weight: 600;
-  padding: var(--space-1) var(--space-2);
-  list-style: none;
-}
-
-.sidebar-section summary::-webkit-details-marker {
-  display: none;
-}
-
-.sidebar-section summary::before {
-  content: '▸';
-  margin-right: var(--space-2);
-}
-
-.sidebar-section[open] summary::before {
-  content: '▾';
+.sidebar-box h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.95rem;
 }
 
 /* Node Palette */

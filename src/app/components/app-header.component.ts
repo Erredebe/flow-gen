@@ -36,4 +36,5 @@ export class AppHeaderComponent {
   @Output() nextTutorialStep = new EventEmitter<void>();
   @Output() loadDemo = new EventEmitter<number>();
   @Output() closeTutorial = new EventEmitter<void>();
+  @Output() openTutorial = new EventEmitter<void>();
 }

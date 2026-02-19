@@ -166,11 +166,14 @@
   font-weight: 700;
 }
 
-.theme-toggle {
-  margin-left: auto;
+.theme-toggle, .help-toggle {
   width: 2.5rem;
   height: 2.5rem;
   padding: 0;
+}
+
+.theme-toggle {
+  margin-left: auto;
 }
 
 /* Forms & Buttons */

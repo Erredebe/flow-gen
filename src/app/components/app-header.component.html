@@ -54,6 +54,10 @@
     <button class="theme-toggle" type="button" (click)="toggleDarkMode.emit()" [attr.aria-label]="darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
       {{ darkMode ? '☀️' : '🌙' }}
     </button>
+
+    <button class="help-toggle" type="button" (click)="openTutorial.emit()" title="Ver tutorial de nuevo" aria-label="Ver tutorial de nuevo">
+      ❓
+    </button>
   </div>
 </header>
 

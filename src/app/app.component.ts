@@ -633,6 +633,12 @@ export class AppComponent {
     localStorage.setItem('iv-flow-tutorial-hidden', 'true');
   }
 
+  reopenTutorial(): void {
+    this.showTutorial = true;
+    this.tutorialStep = 0;
+    localStorage.setItem('iv-flow-tutorial-hidden', 'false');
+  }
+
   undo(): void {
     const snapshot = this.history.pop();
     if (!snapshot) {

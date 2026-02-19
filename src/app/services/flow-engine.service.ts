@@ -1,6 +1,20 @@
 import { Injectable } from '@angular/core';
 import { ExecutionContextSnapshot, ExecutionLog, ExecutionResult, FlowDefinition, FlowNode } from '../models/flow.model';
 
+interface MockServerRoute {
+  method: string;
+  path: string;
+  handler: (payload: unknown, context: Record<string, unknown>) => unknown;
+}
+
+interface MockServerApi {
+  register: (method: string, path: string, handler: (payload: unknown, context: Record<string, unknown>) => unknown) => void;
+  get: (path: string, handler: (payload: unknown, context: Record<string, unknown>) => unknown) => void;
+  post: (path: string, handler: (payload: unknown, context: Record<string, unknown>) => unknown) => void;
+  request: (method: string, path: string, payload?: unknown) => { status: number; body: unknown };
+  listRoutes: () => { method: string; path: string }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class FlowEngineService {
   async execute(flow: FlowDefinition): Promise<ExecutionResult> {
@@ -9,6 +23,9 @@ export class FlowEngineService {
     const failedNodeIds = new Set<string>();
     const context: Record<string, unknown> = {};
     const contextHistory: ExecutionContextSnapshot[] = [];
+    const mockRoutes: MockServerRoute[] = [];
+
+    const server = this.createMockServer(context, mockRoutes);
 
     const start = flow.nodes.find((node) => node.type === 'start');
     if (!start) {
@@ -37,8 +54,8 @@ export class FlowEngineService {
 
       if (currentNode.type === 'script' && currentNode.data.script) {
         try {
-          const scriptFn = new Function('context', currentNode.data.script);
-          const scriptResult = scriptFn(context);
+          const scriptFn = new Function('context', 'server', currentNode.data.script);
+          const scriptResult = scriptFn(context, server);
           logs.push(this.log('info', `Resultado script: ${JSON.stringify(scriptResult)}`));
         } catch (error) {
           logs.push(this.log('error', `Error de script: ${String(error)}`));
@@ -49,13 +66,25 @@ export class FlowEngineService {
 
       if (currentNode.type === 'api' && currentNode.data.apiUrl) {
         try {
-          const response = await fetch(currentNode.data.apiUrl, {
-            method: currentNode.data.apiMethod ?? 'GET',
-            body: currentNode.data.apiMethod === 'POST' ? currentNode.data.apiBody : undefined,
-            headers: { 'Content-Type': 'application/json' }
-          });
-          logs.push(this.log('info', `API status: ${response.status}`));
-          context['lastApiStatus'] = response.status;
+          const method = currentNode.data.apiMethod ?? 'GET';
+          const payload = this.parseApiBody(currentNode.data.apiBody);
+
+          if (currentNode.data.apiUrl.startsWith('mock://')) {
+            const path = currentNode.data.apiUrl.replace('mock://', '/');
+            const mockResponse = server.request(method, path, payload);
+            logs.push(this.log('info', `Mock API status: ${mockResponse.status} (${method} ${path})`));
+            context['lastApiStatus'] = mockResponse.status;
+            context['lastApiResponse'] = mockResponse.body;
+            context['mockRoutes'] = server.listRoutes();
+          } else {
+            const response = await fetch(currentNode.data.apiUrl, {
+              method,
+              body: method === 'POST' ? currentNode.data.apiBody : undefined,
+              headers: { 'Content-Type': 'application/json' }
+            });
+            logs.push(this.log('info', `API status: ${response.status}`));
+            context['lastApiStatus'] = response.status;
+          }
         } catch (error) {
           logs.push(this.log('error', `Error API: ${String(error)}`));
           failedNodeIds.add(currentNode.id);
@@ -104,5 +133,61 @@ export class FlowEngineService {
 
   private log(level: ExecutionLog['level'], message: string): ExecutionLog {
     return { level, message, timestamp: new Date().toISOString() };
+  }
+
+  private createMockServer(context: Record<string, unknown>, routes: MockServerRoute[]): MockServerApi {
+    const register = (method: string, path: string, handler: (payload: unknown, ctx: Record<string, unknown>) => unknown): void => {
+      const normalizedMethod = method.toUpperCase();
+      const normalizedPath = this.normalizeMockPath(path);
+      const existingIndex = routes.findIndex((route) => route.method === normalizedMethod && route.path === normalizedPath);
+      const route: MockServerRoute = { method: normalizedMethod, path: normalizedPath, handler };
+
+      if (existingIndex >= 0) {
+        routes[existingIndex] = route;
+      } else {
+        routes.push(route);
+      }
+    };
+
+    const request = (method: string, path: string, payload?: unknown): { status: number; body: unknown } => {
+      const normalizedMethod = method.toUpperCase();
+      const normalizedPath = this.normalizeMockPath(path);
+      const route = routes.find((item) => item.method === normalizedMethod && item.path === normalizedPath);
+
+      if (!route) {
+        return { status: 404, body: { error: `Ruta mock no encontrada: ${normalizedMethod} ${normalizedPath}` } };
+      }
+
+      const body = route.handler(payload, context);
+      return { status: 200, body };
+    };
+
+    return {
+      register,
+      get: (path, handler) => register('GET', path, handler),
+      post: (path, handler) => register('POST', path, handler),
+      request,
+      listRoutes: () => routes.map((route) => ({ method: route.method, path: route.path }))
+    };
+  }
+
+  private parseApiBody(apiBody?: string): unknown {
+    if (!apiBody?.trim()) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(apiBody);
+    } catch {
+      return apiBody;
+    }
+  }
+
+  private normalizeMockPath(path: string): string {
+    const normalized = path.trim();
+    if (!normalized) {
+      return '/';
+    }
+    return normalized.startsWith('/') ? normalized : `/${normalized}`;
   }
 }

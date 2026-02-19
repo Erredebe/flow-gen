@@ -163,7 +163,17 @@ export class AppComponent {
               'return context.summary;'
             ].join('\n')
           }),
-          this.node('m7', 'end', 1190, 160, 'Fin')
+          this.node('m7', 'script', 1190, 160, 'Alert respuestas mock', {
+            script: [
+              'const summary = context.summary ?? {};',
+              "const message = 'Resumen mock:\\n' + JSON.stringify(summary, null, 2);",
+              'if (typeof alert === "function") {',
+              '  alert(message);',
+              '}',
+              'return summary;'
+            ].join('\n')
+          }),
+          this.node('m8', 'end', 1410, 160, 'Fin')
         ],
         connections: [
           { id: 'mc1', fromNodeId: 'm1', fromPort: 'default', toNodeId: 'm2' },
@@ -171,7 +181,8 @@ export class AppComponent {
           { id: 'mc3', fromNodeId: 'm3', fromPort: 'default', toNodeId: 'm4' },
           { id: 'mc4', fromNodeId: 'm4', fromPort: 'default', toNodeId: 'm5' },
           { id: 'mc5', fromNodeId: 'm5', fromPort: 'default', toNodeId: 'm6' },
-          { id: 'mc6', fromNodeId: 'm6', fromPort: 'default', toNodeId: 'm7' }
+          { id: 'mc6', fromNodeId: 'm6', fromPort: 'default', toNodeId: 'm7' },
+          { id: 'mc7', fromNodeId: 'm7', fromPort: 'default', toNodeId: 'm8' }
         ]
       }
     }

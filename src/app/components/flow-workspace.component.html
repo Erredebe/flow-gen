@@ -89,6 +89,20 @@
         <label>Descripción <textarea [(ngModel)]="node.data.description" (ngModelChange)="updateNode.emit()" rows="3" placeholder="Describe para qué sirve este nodo"></textarea></label>
         <label *ngIf="node.type === 'decision'">Condición <input [(ngModel)]="node.data.condition" (ngModelChange)="updateNode.emit()" placeholder="context.valor > 10" /></label>
         <label *ngIf="node.type === 'script'">Script JS/TS <textarea [(ngModel)]="node.data.script" (ngModelChange)="updateNode.emit()" rows="6" placeholder="Escribe aquí tu script"></textarea></label>
+        <ng-container *ngIf="node.type === 'api'">
+          <label>Método
+            <select [(ngModel)]="node.data.apiMethod" (ngModelChange)="updateNode.emit()">
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+            </select>
+          </label>
+          <label>URL API
+            <input [(ngModel)]="node.data.apiUrl" (ngModelChange)="updateNode.emit()" placeholder="https://api.ejemplo.com o mock://users" />
+          </label>
+          <label>Body (JSON/texto para POST)
+            <textarea [(ngModel)]="node.data.apiBody" (ngModelChange)="updateNode.emit()" rows="4" placeholder='{"name":"Ada"}'></textarea>
+          </label>
+        </ng-container>
         <button class="danger" (click)="deleteSelectedNode.emit()" style="width: 100%;">Eliminar nodo</button>
       </ng-container>
       <ng-template #connectionOrGuide>

@@ -123,6 +123,68 @@ export class AppComponent {
           { id: 'dc6', fromNodeId: 'd5', fromPort: 'default', toNodeId: 'd6' }
         ]
       }
+    },
+    {
+      name: 'Demo mock server (almostnode style)',
+      flow: {
+        id: 'demo-3',
+        name: 'Demo mock server (almostnode style)',
+        updatedAt: new Date().toISOString(),
+        nodes: [
+          this.node('m1', 'start', 70, 180, 'Inicio'),
+          this.node('m2', 'script', 290, 80, 'Registrar rutas mock', {
+            script: [
+              "server.get('/health', () => ({ ok: true, uptime: 'simulada' }));",
+              "server.get('/users', () => ({ total: 2, users: ['Ada', 'Linus'] }));",
+              "server.post('/users', (payload, ctx) => {",
+              "  const body = (payload && typeof payload === 'object') ? payload : {};",
+              "  ctx.createdUser = body.name ?? 'sin-nombre';",
+              "  return { created: true, user: ctx.createdUser };",
+              '});',
+              'context.routesReady = server.listRoutes();',
+              'return context.routesReady;'
+            ].join('\n')
+          }),
+          this.node('m3', 'api', 520, 80, 'GET mock://health', { apiMethod: 'GET', apiUrl: 'mock://health' }),
+          this.node('m4', 'api', 750, 80, 'GET mock://users', { apiMethod: 'GET', apiUrl: 'mock://users' }),
+          this.node('m5', 'api', 520, 250, 'POST mock://users', {
+            apiMethod: 'POST',
+            apiUrl: 'mock://users',
+            apiBody: '{"name":"Grace"}'
+          }),
+          this.node('m6', 'script', 970, 160, 'Consolidar respuestas', {
+            script: [
+              'context.summary = {',
+              '  lastStatus: context.lastApiStatus,',
+              '  lastResponse: context.lastApiResponse,',
+              '  routes: context.routesReady,',
+              '  createdUser: context.createdUser',
+              '};',
+              'return context.summary;'
+            ].join('\n')
+          }),
+          this.node('m7', 'script', 1190, 160, 'Alert respuestas mock', {
+            script: [
+              'const summary = context.summary ?? {};',
+              "const message = 'Resumen mock:\\n' + JSON.stringify(summary, null, 2);",
+              'if (typeof alert === "function") {',
+              '  alert(message);',
+              '}',
+              'return summary;'
+            ].join('\n')
+          }),
+          this.node('m8', 'end', 1410, 160, 'Fin')
+        ],
+        connections: [
+          { id: 'mc1', fromNodeId: 'm1', fromPort: 'default', toNodeId: 'm2' },
+          { id: 'mc2', fromNodeId: 'm2', fromPort: 'default', toNodeId: 'm3' },
+          { id: 'mc3', fromNodeId: 'm3', fromPort: 'default', toNodeId: 'm4' },
+          { id: 'mc4', fromNodeId: 'm4', fromPort: 'default', toNodeId: 'm5' },
+          { id: 'mc5', fromNodeId: 'm5', fromPort: 'default', toNodeId: 'm6' },
+          { id: 'mc6', fromNodeId: 'm6', fromPort: 'default', toNodeId: 'm7' },
+          { id: 'mc7', fromNodeId: 'm7', fromPort: 'default', toNodeId: 'm8' }
+        ]
+      }
     }
   ];
 
@@ -642,7 +704,8 @@ export class AppComponent {
       'Paso 1: agrega un nodo Inicio desde la paleta.',
       'Paso 2: agrega un nodo Tarea y conéctalo.',
       'Paso 3: agrega un nodo Fin y ejecuta el flujo.',
-      'Paso 4: abre ejemplos para aprender nodos Script, Decisión y API.'
+      'Paso 4: abre ejemplos para aprender nodos Script, Decisión y API.',
+      'Paso 5: prueba el demo "mock server" para emular endpoints con mock:// y rutas en script.'
     ];
     return steps[this.tutorialStep] ?? 'Tutorial completado.';
   }
